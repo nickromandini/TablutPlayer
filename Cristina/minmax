@@ -1,0 +1,60 @@
+public Action alphaBetaSearch(State state) {
+		List<Action> actions = state.getAllLegalMoves();
+		
+		//Struttura dati in cui metto azione-valore
+		TreeMap<Integer, Action> evaluatedActions = new TreeMap<>();
+		
+		int v;
+		for (Action action : actions) {
+			//valuto azione e metto dentro struttura dati
+			v = maxValue(resultState(state, action), -1000, 1000);
+			evaluatedActions.put(v, action);
+		}
+		
+		//return action con valore più alto
+		return evaluatedActions.descendingMap().firstEntry().getValue();
+	}
+	
+	public int maxValue(State state, int alpha, int beta) {
+		if(/*stato terminale*/)
+			//return 1000, 0 o -1000 a seconda del caso
+		else if (this.timeMs - System.nanoTime() > timeoutValue)
+			return evaluator.evaluate(state);
+		
+		List<Action> actions = state.getAllLegalMoves();
+		
+		int v = -1000;
+		for (Action action : actions) {
+			v = Math.max(v, minValue(resultState(state, action), alpha, beta));
+			if (v >= beta)
+				return v;
+			alpha = Math.max(alpha, v);
+		}
+		return v;
+	}
+	
+	public int minValue(State state, int alpha, int beta) {
+		List<Action> actions = state.getAllLegalMoves();
+		
+		if(/*stato terminale*/)
+			//return 1000, 0 o -1000 a seconda del caso
+		else if (this.timeMs - System.nanoTime() > timeoutValue)
+			return evaluator.evaluate(state);
+		
+		//else continua
+		
+		int v = 1000;
+		for (Action action : actions) {
+			v = Math.min(v, maxValue(resultState(state, action), alpha, beta));
+			if (v <= alpha)
+				return v;
+			beta = Math.max(beta, v);
+		}
+		return v;
+	}
+	
+	public State resultState(State state, Action action) {
+		State returnState = state.clone();
+		returnState.move(action);
+		return returnState;
+	}
