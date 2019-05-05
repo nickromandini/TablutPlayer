@@ -488,6 +488,14 @@ public abstract class State {
 		return true;
 	}
 
+	public boolean onCitadelsBorder(int[] coord) {
+		List<int[]> citadels = Stream.of(new int[]{3,0}, new int[]{5,0}, new int[]{4,1},
+				new int[]{7,3}, new int[]{7,5}, new int[]{6,4},
+				new int[]{3,7}, new int[]{5,7}, new int[]{4,6},
+				new int[]{0,3}, new int[]{0,5}, new int[]{1,4}).collect(Collectors.toList());
+		return citadels.parallelStream().anyMatch(a -> Arrays.equals(a, coord));
+	}
+
 	public boolean onCitadels(int[] coord) {
 		List<int[]> citadels = Stream.of(new int[]{3,0}, new int[]{4,0}, new int[]{5,0}, new int[]{4,1},
 				new int[]{7,3}, new int[]{7,4}, new int[]{7,5}, new int[]{6,4},

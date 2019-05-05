@@ -207,7 +207,7 @@ public class TablutCristina extends TablutClient {
         TreeMap<Integer,Action> actions = state.getAllLegalMoves();
         System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
-        if(actions.descendingMap().firstEntry().getKey() >= 9000) {
+        if(actions.descendingMap().firstEntry().getKey() >= 1000) {
             return actions.descendingMap().firstEntry().getValue();
         }
 
