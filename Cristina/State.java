@@ -1,10 +1,13 @@
 package it.unibo.ai.didattica.competition.tablut.domain;
 
+import it.unibo.ai.didattica.competition.tablut.client.Evaluation;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -251,33 +254,31 @@ public abstract class State {
 	/*
 	 * Verifica che lo stato sia terminale
 	 */
-	public void isTerminal() {
-		//Vince white se il re si trova su un punto di fuga
+	public boolean isTerminalWhite() {
+		return kingOnEscapePoint();
+	}
 
-		//Vince black se il re viene mangiato
-
-		//Pareggio ??
-
+	public boolean isTerminalBlack() {
+		return kingEatable();
 	}
 
 
-	public List<Action> getAllLegalMoves() {
-		List<Action> actions = new ArrayList<Action>();
+	public TreeMap<Integer,Action> getAllLegalMoves() {
+		TreeMap<Integer,Action> actions = new TreeMap<>();
 
 		for(int[] coordPawn : this.getPawnsCoord()) {
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "NORTH"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "SOUTH"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "WEST"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "EAST"));
+			actions.putAll(getAllLegalMovesInDirection(coordPawn, "NORTH"));
+			actions.putAll(getAllLegalMovesInDirection(coordPawn, "SOUTH"));
+			actions.putAll(getAllLegalMovesInDirection(coordPawn, "WEST"));
+			actions.putAll(getAllLegalMovesInDirection(coordPawn, "EAST"));
 		}
-
 		return actions;
 	}
 
 
-	private List<Action> getAllLegalMovesInDirection(int[] coordPawn, String direction) {
+	private TreeMap<Integer,Action> getAllLegalMovesInDirection(int[] coordPawn, String direction) {
 
-		List<Action> actions = new ArrayList<Action>();
+		TreeMap<Integer,Action> actionsEvaluated = new TreeMap<>();
 		int x = coordPawn[0];
 		int y = coordPawn[1];
 
@@ -286,7 +287,8 @@ public abstract class State {
 				for(int i = y + 1; i < 9; i++) {
 					if(this.getPawn(x,i).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{x,i})) {
 						try {
-							actions.add(new Action(this.getBox(x, y), this.getBox(x, i), this.turn));
+							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
 						} catch(Exception e) {
 							e.printStackTrace();
 						}
@@ -299,7 +301,8 @@ public abstract class State {
 				for(int i = y - 1; i >= 0; i--) {
 					if(this.getPawn(x,i).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{x,i})) {
 						try {
-							actions.add(new Action(this.getBox(x, y), this.getBox(x, i), this.turn));
+							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -312,7 +315,8 @@ public abstract class State {
 				for(int i = x - 1; i >= 0; i--) {
 					if(this.getPawn(i,y).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{i,y})) {
 						try {
-							actions.add(new Action(this.getBox(x, y), this.getBox(i, y), this.turn));
+							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -325,7 +329,8 @@ public abstract class State {
 				for(int i = x + 1; i < 9; i++) {
 					if(this.getPawn(i, y).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{i,y})) {
 						try {
-							actions.add(new Action(this.getBox(x, y), this.getBox(i, y), this.turn));
+							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -338,7 +343,7 @@ public abstract class State {
 		}
 
 
-		return actions;
+		return actionsEvaluated;
 	}
 
 	public int[] getKingCoord() {
@@ -355,6 +360,37 @@ public abstract class State {
 			}
 		}
 		return kingCoord;
+	}
+
+	public List<int[]> getEnemyPawnsCoord() {
+		List<int[]> pawns = new ArrayList<>();
+		int[] buf;
+		if (this.getTurn().equals(StateTablut.Turn.WHITE)) {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board.length; j++) {
+					if (this.getPawn(i, j).equalsPawn(Pawn.BLACK.toString())) {
+						buf = new int[2];
+						buf[0] = i;
+						buf[1] = j;
+						pawns.add(buf);
+					}
+				}
+			}
+		} else {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board.length; j++) {
+					if (this.getPawn(i, j).equalsPawn(Pawn.WHITE.toString())
+							|| this.getPawn(i, j).equalsPawn(State.Pawn.KING.toString())) {
+						buf = new int[2];
+						buf[0] = i;
+						buf[1] = j;
+						pawns.add(buf);
+					}
+				}
+			}
+		}
+
+		return pawns;
 	}
 
 	public List<int[]> getPawnsCoord() {
@@ -394,6 +430,7 @@ public abstract class State {
 
 		return pawns;
 	}
+
 	public boolean kingCanEscape(String direction) {
 		return kingCanEscape(kingCoord, direction);
 	}
@@ -474,5 +511,43 @@ public abstract class State {
 				new int[]{8,2}, new int[]{8,1}, new int[]{8,0}).collect(Collectors.toList());
 		return escapePoints.parallelStream().anyMatch(a -> Arrays.equals(a, coord));
 	}
+
+
+	public boolean kingEatable() {
+
+		return kingEatable(kingCoord);
+
+	}
+
+	// Fatta male
+
+	public boolean kingEatable(int[] coord) {
+		try {
+			Pawn north = this.getPawn(coord[0] - 1, coord[1]);
+			Pawn south = this.getPawn(coord[0] + 1, coord[1]);
+			Pawn west = this.getPawn(coord[0], coord[1] - 1);
+			Pawn east = this.getPawn(coord[0], coord[1] + 1);
+
+			if (coord[0] == 4 && coord[1] == 4) {
+				if (north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")) {
+					return true;
+				} else {
+					return false;
+				}
+			} else if (((north.equalsPawn("B") && south.equalsPawn("B")) || (west.equalsPawn("B") && east.equalsPawn("B")))
+					&& !north.equalsPawn("T") && !south.equalsPawn("T") && !west.equalsPawn("T") && !east.equalsPawn("T"))
+				return true;
+			else if ((north.equalsPawn("T") || north.equalsPawn("B")) &&
+					(south.equalsPawn("T") || south.equalsPawn("B")) &&
+					(east.equalsPawn("T") || east.equalsPawn("B")) &&
+					(west.equalsPawn("T") || west.equalsPawn("B"))) {
+				return true;
+			}
+		}catch (Exception e) {}
+
+		return false;
+
+	}
+
 
 }

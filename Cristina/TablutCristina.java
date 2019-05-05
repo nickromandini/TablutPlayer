@@ -14,6 +14,8 @@ public class TablutCristina extends TablutClient {
 
     private int game;
 
+    private long timeMs;
+
 
     public TablutCristina(String player, String name, int gameChosen) throws UnknownHostException, IOException {
         super(player, name);
@@ -95,8 +97,6 @@ public class TablutCristina extends TablutClient {
         }
 
         List<int[]> pawns = new ArrayList<int[]>();
-        //List<int[]> empty = new ArrayList<int[]>();
-
         System.out.println("You are player " + this.getPlayer().toString() + "!");
 
         while (true) {
@@ -107,20 +107,17 @@ public class TablutCristina extends TablutClient {
                 e1.printStackTrace();
                 System.exit(1);
             }
+            this.timeMs = System.currentTimeMillis();
             System.out.println("Current state:");
             state = this.getCurrentState();
             System.out.println(state.toString());
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
 
             if (this.getPlayer().equals(Turn.WHITE)) {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(StateTablut.Turn.WHITE)) {
 
-                    List<Action> actionList = state.getAllLegalMoves();
-                    Action a = getBestAction(actionList, state);
+                    //List<Action> actionList = state.getAllLegalMoves();
+                    Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -155,8 +152,8 @@ public class TablutCristina extends TablutClient {
 
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(StateTablut.Turn.BLACK)) {
-                    List<Action> actionList = state.getAllLegalMoves();
-                    Action a = getBestAction(actionList, state);
+                    //List<Action> actionList = state.getAllLegalMoves();
+                    Action a = null;//getBestAction(actionList, state);
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -186,13 +183,12 @@ public class TablutCristina extends TablutClient {
 
     }
 
-    private Action getBestAction(List<Action> actions, State state) {
+    /*private Action getBestAction(List<Action> actions, State state) {
 
-        Evaluation eval = new Evaluation();
         TreeMap<Integer, Action> actionMap = new TreeMap<Integer, Action>();
         int i = 0;
         for(Action a : actions) {
-            int value = eval.evaluateMock(a, state );
+            int value = Evaluation.evaluateAction(a, state );
             actionMap.put(value + i, a);
             i++;
             if (value == 1000) {
@@ -205,6 +201,85 @@ public class TablutCristina extends TablutClient {
         }
         return actionMap.descendingMap().firstEntry().getValue();
 
+    }*/
+
+    public Action alphaBetaSearch(State state) {
+        TreeMap<Integer,Action> actions = state.getAllLegalMoves();
+        System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
+
+        if(actions.descendingMap().firstEntry().getKey() >= 9000) {
+            return actions.descendingMap().firstEntry().getValue();
+        }
+
+
+        //Struttura dati in cui metto azione-valore
+        TreeMap<Integer, Action> evaluatedActions = new TreeMap<>();
+
+        int v;
+        for (Action action : actions.descendingMap().descendingMap().values()) {
+            //valuto azione e metto dentro struttura dati
+            v = maxValue(resultState(state, action), -10000, 10000);
+            evaluatedActions.put(v, action);
+            if (System.currentTimeMillis() - this.timeMs > 10000) {
+                return evaluatedActions.descendingMap().firstEntry().getValue();
+            }
+        }
+
+        //return action con valore più alto
+        if(evaluatedActions.descendingMap().firstEntry().getKey() < 1000)
+            return evaluatedActions.get(new Random().nextInt(evaluatedActions.size()));
+        return evaluatedActions.descendingMap().firstEntry().getValue();
+    }
+
+    public int maxValue(State state, int alpha, int beta) {
+        if(state.isTerminalWhite()) {
+            System.out.println("Trovato white terminale");
+            return 1000;
+        } else if (System.currentTimeMillis() - this.timeMs > 10000) {
+            return Evaluation.evaluate(state);
+        }
+
+        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
+
+        int v = -10000;
+        for (Action action : actions.descendingMap().values()) {
+            v = Math.max(v, minValue(resultState(state, action), alpha, beta));
+            if (v >= beta)
+                return v;
+            alpha = Math.max(alpha, v);
+        }
+        return v;
+    }
+
+    public int minValue(State state, int alpha, int beta) {
+
+
+        if(state.isTerminalBlack()) {
+            return -10000;
+        }
+        else if (System.currentTimeMillis() - this.timeMs > 10000) {
+            return Evaluation.evaluate(state);
+        }
+        //return 1000, 0 o -1000 a seconda del caso
+
+
+        //else continua
+        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
+
+        int v = 10000;
+        for (Action action : actions.descendingMap().values()) {
+            v = Math.min(v, maxValue(resultState(state, action), alpha, beta));
+            if (v <= alpha)
+                return v;
+            beta = Math.max(beta, v);
+        }
+        return v;
+    }
+
+    public State resultState(State state, Action action) {
+        State returnState = state.clone();
+        returnState.move(action);
+        return returnState;
     }
 
 
