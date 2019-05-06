@@ -15,7 +15,7 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-
+    private long timeoutValue = 10000;
 
     public TablutCristina(String player, String name, int gameChosen) throws UnknownHostException, IOException {
         super(player, name);
@@ -115,7 +115,7 @@ public class TablutCristina extends TablutClient {
             if (this.getPlayer().equals(Turn.WHITE)) {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(StateTablut.Turn.WHITE)) {
-
+                	System.out.println("E' il mio turno");
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
                     System.out.println("Mossa scelta: " + a.toString());
@@ -153,7 +153,7 @@ public class TablutCristina extends TablutClient {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(StateTablut.Turn.BLACK)) {
                     //List<Action> actionList = state.getAllLegalMoves();
-                    Action a = null;//getBestAction(actionList, state);
+                		Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -184,7 +184,6 @@ public class TablutCristina extends TablutClient {
     }
 
     /*private Action getBestAction(List<Action> actions, State state) {
-
         TreeMap<Integer, Action> actionMap = new TreeMap<Integer, Action>();
         int i = 0;
         for(Action a : actions) {
@@ -200,16 +199,17 @@ public class TablutCristina extends TablutClient {
             return actionMap.get(new Random().nextInt(actionMap.size()));
         }
         return actionMap.descendingMap().firstEntry().getValue();
-
     }*/
 
     public Action alphaBetaSearch(State state) {
         TreeMap<Integer,Action> actions = state.getAllLegalMoves();
         System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
+        /*
         if(actions.descendingMap().firstEntry().getKey() >= 1000) {
             return actions.descendingMap().firstEntry().getValue();
         }
+        */
 
 
         //Struttura dati in cui metto azione-valore
@@ -235,7 +235,7 @@ public class TablutCristina extends TablutClient {
         if(state.isTerminalWhite()) {
             System.out.println("Trovato white terminale");
             return 1000;
-        } else if (System.currentTimeMillis() - this.timeMs > 10000) {
+        } else if (System.currentTimeMillis() - this.timeMs > timeoutValue) {
             return Evaluation.evaluate(state);
         }
 
@@ -257,7 +257,7 @@ public class TablutCristina extends TablutClient {
         if(state.isTerminalBlack()) {
             return -10000;
         }
-        else if (System.currentTimeMillis() - this.timeMs > 10000) {
+        else if (System.currentTimeMillis() - this.timeMs > timeoutValue) {
             return Evaluation.evaluate(state);
         }
         //return 1000, 0 o -1000 a seconda del caso
