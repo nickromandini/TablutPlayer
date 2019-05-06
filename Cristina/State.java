@@ -292,6 +292,13 @@ public abstract class State {
 						} catch(Exception e) {
 							e.printStackTrace();
 						}
+					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(new int[]{x,y}) && this.getPawn(x,i).equalsPawn(State.Pawn.EMPTY.toString())){
+						try {
+							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
+						} catch(Exception e) {
+							e.printStackTrace();
+						}
 					} else {
 						break;
 					}
@@ -300,6 +307,13 @@ public abstract class State {
 			case "WEST":
 				for(int i = y - 1; i >= 0; i--) {
 					if(this.getPawn(x,i).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{x,i})) {
+						try {
+							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
+						} catch( Exception e) {
+							e.printStackTrace();
+						}
+					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(new int[]{x,y}) && this.getPawn(x,i).equalsPawn(State.Pawn.EMPTY.toString())) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
 							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
@@ -320,6 +334,13 @@ public abstract class State {
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
+					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(new int[]{x,y}) && this.getPawn(i,y).equalsPawn(State.Pawn.EMPTY.toString())){
+						try {
+							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
+						} catch( Exception e) {
+							e.printStackTrace();
+						}
 					} else {
 						break;
 					}
@@ -328,6 +349,13 @@ public abstract class State {
 			case "SOUTH":
 				for(int i = x + 1; i < 9; i++) {
 					if(this.getPawn(i, y).equalsPawn(State.Pawn.EMPTY.toString()) && !onCitadels(new int[]{i,y})) {
+						try {
+							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
+							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
+						} catch( Exception e) {
+							e.printStackTrace();
+						}
+					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(new int[]{x,y}) && this.getPawn(i, y).equalsPawn(State.Pawn.EMPTY.toString())){
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
 							actionsEvaluated.put(Evaluation.evaluateAction(newAction, this, direction), newAction);
