@@ -50,6 +50,30 @@
             </classpath>
         </java>
     </target>
+    <target name="human">
+          <java classname="it.unibo.ai.didattica.competition.tablut.client.TablutHumanClient" fork="true">
+	          <classpath>
+	               <pathelement location="lib/gson-2.2.2.jar"/>
+	               <pathelement location="build"/>
+	          </classpath>
+	     </java>
+     </target>
+	<target name="black">
+	     <java classname="it.unibo.ai.didattica.competition.tablut.client.TablutHumanBlackClient" fork="true">
+	          <classpath>
+	               <pathelement location="lib/gson-2.2.2.jar"/>
+	               <pathelement location="build"/>
+	          </classpath>
+	     </java>
+	</target>
+	<target name="white">
+	     <java classname="it.unibo.ai.didattica.competition.tablut.client.TablutHumanWhiteClient" fork="true">
+	          <classpath>
+	               <pathelement location="lib/gson-2.2.2.jar"/>
+	               <pathelement location="build"/>
+	          </classpath>
+	     </java>
+     </target>
 
 
 
