@@ -4,6 +4,7 @@ import it.unibo.ai.didattica.competition.tablut.domain.Action;
 import it.unibo.ai.didattica.competition.tablut.domain.State;
 import it.unibo.ai.didattica.competition.tablut.domain.StateTablut;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -11,8 +12,30 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Evaluation {
+	
+	public static List<String> citadels = new ArrayList<String>();
 
-    public Evaluation() {}
+    public Evaluation() {
+    		
+		Evaluation.citadels.add("a4");
+		Evaluation.citadels.add("a5");
+		Evaluation.citadels.add("a6");
+		Evaluation.citadels.add("b5");
+		Evaluation.citadels.add("d1");
+		Evaluation.citadels.add("e1");
+		Evaluation.citadels.add("f1");
+		Evaluation.citadels.add("e2");
+		Evaluation.citadels.add("i4");
+		Evaluation.citadels.add("i5");
+		Evaluation.citadels.add("i6");
+		Evaluation.citadels.add("h5");
+		Evaluation.citadels.add("d9");
+		Evaluation.citadels.add("e9");
+		Evaluation.citadels.add("f9");
+		Evaluation.citadels.add("e8");
+    }
+    
+  
 
 
     public static int evaluateAction(Action a, State state, String direction) {
@@ -114,8 +137,17 @@ public class Evaluation {
 
 
             }
+        } 
+        else { // caso black
+        		if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
+        			return ThreadLocalRandom.current().nextInt(9000,  9500);
+        		
+        		if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
+        			return ThreadLocalRandom.current().nextInt(1000, 2001);
+        			
         }
         return ThreadLocalRandom.current().nextInt(0,  1000);
+        
     }
 
     private static boolean checkNorth(State.Pawn north, State state, Action a) {
@@ -154,11 +186,23 @@ public class Evaluation {
     public static int evaluate(State state) {
 
         if(state.getTurn().equalsTurn(State.Turn.BLACK.toString())) {
-            return ThreadLocalRandom.current().nextInt(0,  1000);
+       
+            
+        		//if il re è stato mangiato
+        		if(state.isTerminalBlack())
+        			return ThreadLocalRandom.current().nextInt(9500,  10001);
+           
+        		//if il re sta per essere mangiato
+        		if(state.kingEatable() || state.isKingEated())
+         		return ThreadLocalRandom.current().nextInt(9000,  9500);
+        		
+        		//Altri casi
+        		return ThreadLocalRandom.current().nextInt(0,  1000);
+            
         } else if (state.getTurn().equalsTurn(State.Turn.WHITE.toString())) {
 
                 if (state.kingOnEscapePoint())
-                    return ThreadLocalRandom.current().nextInt(9500,  10001);;
+                    return ThreadLocalRandom.current().nextInt(9500,  10001);
 
                 if (state.kingCanEscape( "NORTH") || state.kingCanEscape("SOUTH") || state.kingCanEscape("WEST") || state.kingCanEscape("EAST")) {
                     return ThreadLocalRandom.current().nextInt(9000,  9500);
@@ -169,6 +213,7 @@ public class Evaluation {
                     return ThreadLocalRandom.current().nextInt(1000,  2001);
                 }*/
 
+                //Altri casi
                 return ThreadLocalRandom.current().nextInt(0,  1000);
 
 
@@ -252,7 +297,299 @@ public class Evaluation {
 
         return false;
     }
-
-
+    
+    private static boolean checkCaptureBlackKingLeft(State state, Action a){
+		//ho il re sulla sinistra
+		if (a.getColumnTo()>1&&state.getPawn(a.getRowTo(), a.getColumnTo()-1).equalsPawn("K"))
+		{
+			//re sul trono
+			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e5"))
+			{
+				if(state.getPawn(3, 4).equalsPawn("B")
+						&& state.getPawn(4, 3).equalsPawn("B")
+						&& state.getPawn(5, 4).equalsPawn("B"))
+				{
+					return true;
+					
+				}
+			}
+			//re adiacente al trono
+			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e4"))
+			{
+				if(state.getPawn(2, 4).equalsPawn("B")
+						&& state.getPawn(3, 3).equalsPawn("B"))
+				{
+					return true;
+					
+				}
+			}
+			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e6"))
+			{
+				if(state.getPawn(5, 3).equalsPawn("B")
+						&& state.getPawn(6, 4).equalsPawn("B"))
+				{
+					return true;
+					
+				}
+			}
+			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("f5"))
+			{
+				if(state.getPawn(3, 5).equalsPawn("B")
+						&& state.getPawn(5, 5).equalsPawn("B"))
+				{
+					return true;
+					
+				}
+			}
+			//sono fuori dalle zone del trono
+			if(!state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e5")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e6")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e4")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("f5"))
+			{
+				if(state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()-2)))
+				{
+					return true;
+				}					
+			}
+		}		
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackKingRight(State state, Action a){
+		//ho il re sulla destra
+		if (a.getColumnTo()<state.getBoard().length-2&&(state.getPawn(a.getRowTo(),a.getColumnTo()+1).equalsPawn("K")))				
+		{
+			//re sul trono
+			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e5"))
+			{
+				if(state.getPawn(3, 4).equalsPawn("B")
+						&& state.getPawn(4, 5).equalsPawn("B")
+						&& state.getPawn(5, 4).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//re adiacente al trono
+			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e4"))
+			{
+				if(state.getPawn(2, 4).equalsPawn("B")
+						&& state.getPawn(3, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e6"))
+			{
+				if(state.getPawn(5, 5).equalsPawn("B")
+						&& state.getPawn(6, 4).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("d5"))
+			{
+				if(state.getPawn(3, 3).equalsPawn("B")
+						&& state.getPawn(3, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//sono fuori dalle zone del trono
+			if(!state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("d5")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e6")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e4")
+					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e5"))
+			{
+				if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()+2)))
+				{
+					return true;
+				}					
+			}
+		}
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackKingDown(State state, Action a){
+		//ho il re sotto
+		if (a.getRowTo()<state.getBoard().length-2&&state.getPawn(a.getRowTo()+1,a.getColumnTo()).equalsPawn("K"))
+		{
+			System.out.println("Ho il re sotto");
+			//re sul trono
+			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e5"))
+			{
+				if(state.getPawn(5, 4).equalsPawn("B")
+						&& state.getPawn(4, 5).equalsPawn("B")
+						&& state.getPawn(4, 3).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//re adiacente al trono
+			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e4"))
+			{
+				if(state.getPawn(3, 3).equalsPawn("B")
+						&& state.getPawn(3, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("d5"))
+			{
+				if(state.getPawn(4, 2).equalsPawn("B")
+						&& state.getPawn(5, 3).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("f5"))
+			{
+				if(state.getPawn(4, 6).equalsPawn("B")
+						&& state.getPawn(5, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//sono fuori dalle zone del trono
+			if(!state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("d5")
+					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e4")
+					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("f5")
+					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e5"))
+			{
+				if(state.getPawn(a.getRowTo()+2, a.getColumnTo()).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo()+2, a.getColumnTo())))
+				{
+					return true;
+				}					
+			}			
+		}		
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackKingUp(State state, Action a){
+		//ho il re sopra
+		if (a.getRowTo()>1&&state.getPawn(a.getRowTo()-1, a.getColumnTo()).equalsPawn("K"))
+		{
+			//re sul trono
+			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e5"))
+			{
+				if(state.getPawn(3, 4).equalsPawn("B")
+						&& state.getPawn(4, 5).equalsPawn("B")
+						&& state.getPawn(4, 3).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//re adiacente al trono
+			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e6"))
+			{
+				if(state.getPawn(5, 3).equalsPawn("B")
+						&& state.getPawn(5, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("d5"))
+			{
+				if(state.getPawn(4, 2).equalsPawn("B")
+						&& state.getPawn(3, 3).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("f5"))
+			{
+				if(state.getPawn(4, 4).equalsPawn("B")
+						&& state.getPawn(3, 5).equalsPawn("B"))
+				{
+					return true;
+				}
+			}
+			//sono fuori dalle zone del trono
+			if(!state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("d5")
+					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e4")
+					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("f5")
+					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e5"))
+			{
+				if(state.getPawn(a.getRowTo()-2, a.getColumnTo()).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo()-2, a.getColumnTo())))
+				{
+					return true;
+				}					
+			}	
+		}
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackPawnRight(State state, Action a)	{
+		//mangio a destra
+		if (a.getColumnTo() < state.getBoard().length - 2 && state.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("W"))
+		{
+			if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B"))
+			{
+				return true;
+			}
+			if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T"))
+			{
+				return true;
+			}
+			if(citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() + 2)))
+			{
+				return true;
+			}
+			if(state.getBox(a.getRowTo(), a.getColumnTo()+2).equals("e5"))
+			{
+				return true;
+			}
+			
+		}
+		
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackPawnLeft(State state, Action a){
+		//mangio a sinistra
+		if (a.getColumnTo() > 1
+				&& state.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("W")
+				&& (state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
+						|| state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T")
+						|| Evaluation.citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() - 2))
+						|| (state.getBox(a.getRowTo(), a.getColumnTo()-2).equals("e5"))))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackPawnUp(State state, Action a){
+		// controllo se mangio sopra
+		if (a.getRowTo() > 1
+				&& state.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("W")
+				&& (state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("B")
+						|| state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T")
+						|| Evaluation.citadels.contains(state.getBox(a.getRowTo() - 2, a.getColumnTo()))
+						|| (state.getBox(a.getRowTo()-2, a.getColumnTo()).equals("e5"))))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean checkCaptureBlackPawnDown(State state, Action a){
+		// controllo se mangio sotto
+		if (a.getRowTo() < state.getBoard().length - 2
+				&& state.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("W")
+				&& (state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("B")
+						|| state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T")
+						|| Evaluation.citadels.contains(state.getBox(a.getRowTo() + 2, a.getColumnTo()))
+						|| (state.getBox(a.getRowTo()+2, a.getColumnTo()).equals("e5"))))
+		{
+			return true;
+		}
+		return false;
+	}
+	
 
 }
