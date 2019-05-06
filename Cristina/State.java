@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 public abstract class State {
 
 	private int[] kingCoord = new int[]{-1,-1};
+	private Evaluation evaluation = new Evaluation();	
 
 	/**
 	 * Turn represent the player that has to move or the end of the game(A win
@@ -583,6 +584,16 @@ public abstract class State {
 
 		return false;
 
+	}
+	
+	public boolean isKingEated() {
+		try {
+			if(getPawn(kingCoord[0], kingCoord[1]) != null)
+				return false;
+		} catch (Exception e) {
+			
+		}
+		return true;
 	}
 
 
