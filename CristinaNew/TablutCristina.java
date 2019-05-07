@@ -124,6 +124,9 @@ public class TablutCristina extends TablutClient {
                 	System.out.println("E' il mio turno");
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+                    state.move(a);
+                    System.out.println("mia pedina mangiabile " + state.enemyPawnEatable("B"));
+                    System.out.println("re mangiabile " + state.kingCanBeEaten());
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -159,7 +162,8 @@ public class TablutCristina extends TablutClient {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
                     //List<Action> actionList = state.getAllLegalMoves();
-                		Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+                    Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -212,6 +216,7 @@ public class TablutCristina extends TablutClient {
         //System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
         System.out.println("nemici vicino re " + state.enemiesNearKing());
+
 
         if(actions.descendingMap().firstEntry().getKey() == 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
             return actions.descendingMap().firstEntry().getValue();

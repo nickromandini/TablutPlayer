@@ -228,6 +228,9 @@ public class Evaluation {
 		if(state.kingCanBeEaten()/* || state.isKingEated()*/)
 			return -ThreadLocalRandom.current().nextInt(9000,  9500);
 
+		if(enemyPawnEatable(state, "B"))
+			value -= ThreadLocalRandom.current().nextInt(800,  900);
+
 		value -= (250 * state.enemiesNearKing());
 
 
@@ -262,7 +265,7 @@ public class Evaluation {
 		for( int[] pawn : enemyPawns) {
 
 			// Non posso mangiare neri dentro accampamento
-			if(state.onCitadels(pawn) && state.getTurn().equalsTurn(State.Turn.WHITE.toString()))
+			if(state.onCitadels(pawn) && me.equals("W"))
 				continue;
 
 			try {

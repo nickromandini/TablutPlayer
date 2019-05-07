@@ -240,7 +240,7 @@ public abstract class State {
 	 * Sposta la pedina bianca/nera a seconda che il turno sia di White o di Black
 	 * e cambia il turno corrente
 	 */
-	public void move(Action action) {
+	/*public void move(Action action) {
 		this.board[action.getRowFrom()][action.getColumnFrom()] = Pawn.EMPTY;
 		if (this.turn.equalsTurn("WHITE")) {
 			this.board[action.getRowTo()][action.getColumnTo()] = Pawn.WHITE;
@@ -250,7 +250,29 @@ public abstract class State {
 			this.board[action.getRowTo()][action.getColumnTo()] = Pawn.BLACK;
 			this.setTurn(turn.WHITE);
 		}
+	}*/
+	public void move(Action a) {
+		State.Pawn pawn = getPawn(a.getRowFrom(), a.getColumnFrom());
+
+		// libero il trono o una casella qualunque
+		if (a.getColumnFrom() == 4 && a.getRowFrom() == 4) {
+			board[a.getRowFrom()][a.getColumnFrom()] = State.Pawn.THRONE;
+		} else {
+			board[a.getRowFrom()][a.getColumnFrom()] = State.Pawn.EMPTY;
+		}
+
+		// metto nel nuovo tabellone la pedina mossa
+		board[a.getRowTo()][a.getColumnTo()] = pawn;
+		// aggiorno il tabellone
+		// cambio il turno
+		if (getTurn().equalsTurn(State.Turn.WHITE.toString())) {
+			setTurn(State.Turn.BLACK);
+		} else {
+			setTurn(State.Turn.WHITE);
+		}
+
 	}
+
 
 	/*
 	 * Verifica che lo stato sia terminale
@@ -634,6 +656,8 @@ public abstract class State {
 			kingCoord = getKingCoord();
 		}
 
+		System.out.println(anEnemyCanArriveSouth(kingCoord));
+
 		boolean northBorder = false;
 		boolean southBorder = false;
 		boolean westBorder = false;
@@ -674,16 +698,16 @@ public abstract class State {
 
 		if(kingCoord[0] == 4 && kingCoord[1] == 4) {
 			if(north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B")
-				&& anEnemyCanMoveEast(kingCoord))
+				&& anEnemyCanArriveEast(kingCoord))
 				return true;
 			else if(north.equalsPawn("B") && south.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveWest(kingCoord))
+					&& anEnemyCanArriveWest(kingCoord))
 				return true;
 			else if(north.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveSouth(kingCoord))
+					&& anEnemyCanArriveSouth(kingCoord))
 				return true;
 			else if(south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveNorth(kingCoord))
+					&& anEnemyCanArriveNorth(kingCoord))
 				return true;
 
 		}
@@ -692,52 +716,52 @@ public abstract class State {
 
 		if(kingCoord[0] == 3 && kingCoord[1] == 4) {
 			if(north.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveEast(kingCoord))
+					&& anEnemyCanArriveEast(kingCoord))
 				return true;
-			if(north.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveWest(kingCoord))
+			else if(north.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanArriveWest(kingCoord))
 				return true;
-			if(east.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveNorth(kingCoord))
+			else if(east.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanArriveNorth(kingCoord))
 				return true;
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 3) {
 			if(north.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveSouth(kingCoord))
+					&& anEnemyCanArriveSouth(kingCoord))
 				return true;
-			if(north.equalsPawn("B") && south.equalsPawn("B")
-					&& anEnemyCanMoveWest(kingCoord))
+			else if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanArriveWest(kingCoord))
 				return true;
-			if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveNorth(kingCoord))
+			else if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanArriveNorth(kingCoord))
 				return true;
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 5) {
 			if(north.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveSouth(kingCoord))
+					&& anEnemyCanArriveSouth(kingCoord))
 				return true;
-			if(north.equalsPawn("B") && south.equalsPawn("B")
-					&& anEnemyCanMoveEast(kingCoord))
+			else if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanArriveEast(kingCoord))
 				return true;
-			if(south.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanMoveNorth(kingCoord))
+			else if(south.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanArriveNorth(kingCoord))
 				return true;
 		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
 			if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveSouth(kingCoord))
+					&& anEnemyCanArriveSouth(kingCoord))
 				return true;
-			if(south.equalsPawn("B") && south.equalsPawn("B")
-					&& anEnemyCanMoveWest(kingCoord))
+			else if(south.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanArriveWest(kingCoord))
 				return true;
-			if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanMoveSouth(kingCoord))
+			else if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanArriveSouth(kingCoord))
 				return true;
 		}
 
 		// Campo aperto
 
-		if((north.equalsPawn("B") && anEnemyCanMoveSouth(kingCoord))
-				|| (south.equalsPawn("B") && anEnemyCanMoveNorth(kingCoord))
-				|| (west.equalsPawn("B") && anEnemyCanMoveEast(kingCoord))
-				|| (east.equalsPawn("B") && anEnemyCanMoveWest(kingCoord)))
+		if(((north.equalsPawn("B") || onCitadels(new int[]{kingCoord[0] - 1, kingCoord[1]})) && anEnemyCanArriveSouth(kingCoord))
+				|| ((south.equalsPawn("B") || onCitadels(new int[]{kingCoord[0] + 1, kingCoord[1]})) && anEnemyCanArriveNorth(kingCoord))
+				|| ((west.equalsPawn("B") || onCitadels(new int[]{kingCoord[0], kingCoord[1] - 1})) && anEnemyCanArriveEast(kingCoord))
+				|| ((east.equalsPawn("B") || onCitadels(new int[]{kingCoord[0], kingCoord[1] + 1})) && anEnemyCanArriveWest(kingCoord)))
 			return true;
 
 
@@ -747,20 +771,24 @@ public abstract class State {
 
 	}
 
-	private boolean anEnemyCanMoveNorth(int[] coord) {
+	private boolean anEnemyCanArriveNorth(int[] coord) {
+		coord[0]--;
 		return (checkNorthEnemyMovement(coord) || checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
 	}
 
-	private boolean anEnemyCanMoveSouth(int[] coord) {
+	private boolean anEnemyCanArriveSouth(int[] coord) {
+		coord[0]++;
 		return (checkSouthEnemyMovement(coord) || checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
 	}
 
-	private boolean anEnemyCanMoveWest(int[] coord) {
-		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkEastEnemyMovement(coord));
+	private boolean anEnemyCanArriveWest(int[] coord) {
+		coord[1]--;
+		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkWestEnemyMovement(coord));
 	}
 
-	private boolean anEnemyCanMoveEast(int[] coord) {
-		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkWestEnemyMovement(coord));
+	private boolean anEnemyCanArriveEast(int[] coord) {
+		coord[1]++;
+		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkEastEnemyMovement(coord));
 	}
 
 
@@ -855,6 +883,84 @@ public abstract class State {
 
 		return enemies;
 
+	}
+
+	public boolean enemyPawnEatable(String me) {
+
+		List<int[]> enemyPawns = getEnemyPawnsCoord();
+
+		boolean northBorder = false;
+		boolean southBorder = false;
+		boolean westBorder = false;
+		boolean eastBorder = false;
+
+		State.Pawn north = null;
+		State.Pawn south = null;
+		State.Pawn west = null;
+		State.Pawn east = null;
+
+
+		for( int[] pawn : enemyPawns) {
+
+			// Non posso mangiare neri dentro accampamento
+			if(onCitadels(pawn) && me.equals("W"))
+				continue;
+
+			try {
+				north = getPawn(pawn[0] - 1, pawn[1]);
+			} catch (Exception e) {
+				northBorder = true;
+			}
+
+			try {
+				south = getPawn(pawn[0] + 1, pawn[1]);
+			} catch (Exception e) {
+				southBorder = true;
+			}
+
+			try {
+				west = getPawn(pawn[0], pawn[1] - 1);
+			} catch (Exception e) {
+				westBorder = true;
+			}
+
+			try {
+				east = getPawn(pawn[0], pawn[1] + 1);
+			} catch (Exception e) {
+				eastBorder = true;
+			}
+
+
+			// Campo aperto
+
+			if(!northBorder && !southBorder && (north.equalsPawn(me) && south.equalsPawn(me)))
+				return true;
+
+			if(!westBorder && !eastBorder && (west.equalsPawn(me) && east.equalsPawn(me)))
+				return true;
+
+
+			// Vicinanza trono
+
+			if((!northBorder && !southBorder && north.equalsPawn("T") && south.equalsPawn(me))
+					|| (!northBorder && !southBorder && south.equalsPawn("T") && north.equalsPawn(me))
+					|| (!westBorder && !eastBorder && west.equalsPawn("T") && east.equalsPawn(me))
+					|| (!westBorder && !eastBorder && east.equalsPawn("T") && west.equalsPawn(me)))
+				return true;
+
+			// Vicinanza cittadella
+
+			if((!southBorder && onCitadelsBorder(new int[]{pawn[0] - 1, pawn[1]}) && south.equalsPawn(me))
+					|| (!northBorder && onCitadelsBorder(new int[]{pawn[0] + 1, pawn[1]}) && north.equalsPawn(me))
+					|| (!eastBorder && onCitadelsBorder(new int[]{pawn[0], pawn[1] - 1}) && east.equalsPawn(me))
+					|| (!westBorder && onCitadelsBorder(new int[]{pawn[0], pawn[1] + 1}) && west.equalsPawn(me)))
+				return true;
+
+
+
+		}
+
+		return false;
 	}
 
 
