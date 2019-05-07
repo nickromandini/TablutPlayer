@@ -218,7 +218,7 @@ public class Evaluation {
                     value = ThreadLocalRandom.current().nextInt(1000,  2001);
                 }
                 
-                value += state.minKingDistanceFromSafe();
+                value += (10000 * 1/state.minKingDistanceFromSafe());
 				
 
 				if(state.isTerminalBlack())
