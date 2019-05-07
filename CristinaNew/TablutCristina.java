@@ -211,10 +211,11 @@ public class TablutCristina extends TablutClient {
         TreeMap<Integer,Action> actions = state.getAllLegalMoves();
         System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
-
+        /*
         if(actions.descendingMap().firstEntry().getKey() == 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
             return actions.descendingMap().firstEntry().getValue();
         }
+        */
 
         int depth = 0;
 
@@ -231,7 +232,6 @@ public class TablutCristina extends TablutClient {
 
         /*
         int v;
-
         for (Action action : actions.descendingMap().values()) {
             //valuto azione e metto dentro struttura dati
             v = maxValue(resultState(state, action), -20000, 20000, depth);
