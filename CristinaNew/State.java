@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public abstract class State {
 
 	private int[] kingCoord = new int[]{-1,-1};
-	private Evaluation evaluation = new Evaluation();	
+	private Evaluation evaluation = new Evaluation();
 
 	/**
 	 * Turn represent the player that has to move or the end of the game(A win
@@ -593,18 +593,23 @@ public abstract class State {
 		return false;
 
 	}
-	
+
 	public boolean isKingEated() {
 		try {
 			if(getPawn(kingCoord[0], kingCoord[1]) != null)
 				return false;
 		} catch (Exception e) {
-			
+
 		}
 		return true;
 	}
 
 	public int minKingDistanceFromSafe() {
+
+		if(kingCoord[0] == -1) {
+			kingCoord = getKingCoord();
+		}
+
 		int minDist = 19;
 		int temp;
 		List<int[]> escapePoints = Stream.of(new int[]{0,0}, new int[]{1,0}, new int[]{2,0},
@@ -622,7 +627,236 @@ public abstract class State {
 		}
 		return minDist;
 	}
-	
-	
+
+
+	public boolean kingCanBeEaten() {
+		if(kingCoord[0] == -1) {
+			kingCoord = getKingCoord();
+		}
+
+		boolean northBorder = false;
+		boolean southBorder = false;
+		boolean westBorder = false;
+		boolean eastBorder = false;
+
+		Pawn north = null;
+		Pawn south = null;
+		Pawn west = null;
+		Pawn east = null;
+
+
+		try {
+			north = this.getPawn(kingCoord[0] - 1, kingCoord[1]);
+		} catch (Exception e) {
+			northBorder = true;
+		}
+
+		try {
+			south = this.getPawn(kingCoord[0] + 1, kingCoord[1]);
+		} catch (Exception e) {
+			southBorder = true;
+		}
+
+		try {
+			west = this.getPawn(kingCoord[0], kingCoord[1] - 1);
+		} catch (Exception e) {
+			westBorder = true;
+		}
+
+		try {
+			east = this.getPawn(kingCoord[0], kingCoord[1] + 1);
+		} catch (Exception e) {
+			eastBorder = true;
+		}
+
+
+		// Re sul trono
+
+		if(kingCoord[0] == 4 && kingCoord[1] == 4) {
+			if(north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B")
+				&& anEnemyCanMoveEast(kingCoord))
+				return true;
+			else if(north.equalsPawn("B") && south.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveWest(kingCoord))
+				return true;
+			else if(north.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveSouth(kingCoord))
+				return true;
+			else if(south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveNorth(kingCoord))
+				return true;
+
+		}
+
+		// Re vicino al trono
+
+		if(kingCoord[0] == 3 && kingCoord[1] == 4) {
+			if(north.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveEast(kingCoord))
+				return true;
+			if(north.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveWest(kingCoord))
+				return true;
+			if(east.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveNorth(kingCoord))
+				return true;
+		} else if(kingCoord[0] == 4 && kingCoord[1] == 3) {
+			if(north.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveSouth(kingCoord))
+				return true;
+			if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanMoveWest(kingCoord))
+				return true;
+			if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveNorth(kingCoord))
+				return true;
+		} else if(kingCoord[0] == 4 && kingCoord[1] == 5) {
+			if(north.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveSouth(kingCoord))
+				return true;
+			if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanMoveEast(kingCoord))
+				return true;
+			if(south.equalsPawn("B") && east.equalsPawn("B")
+					&& anEnemyCanMoveNorth(kingCoord))
+				return true;
+		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
+			if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveSouth(kingCoord))
+				return true;
+			if(south.equalsPawn("B") && south.equalsPawn("B")
+					&& anEnemyCanMoveWest(kingCoord))
+				return true;
+			if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& anEnemyCanMoveSouth(kingCoord))
+				return true;
+		}
+
+		// Campo aperto
+
+		if((north.equalsPawn("B") && anEnemyCanMoveSouth(kingCoord))
+				|| (south.equalsPawn("B") && anEnemyCanMoveNorth(kingCoord))
+				|| (west.equalsPawn("B") && anEnemyCanMoveEast(kingCoord))
+				|| (east.equalsPawn("B") && anEnemyCanMoveWest(kingCoord)))
+			return true;
+
+
+
+
+		return false;
+
+	}
+
+	private boolean anEnemyCanMoveNorth(int[] coord) {
+		return (checkNorthEnemyMovement(coord) || checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
+	}
+
+	private boolean anEnemyCanMoveSouth(int[] coord) {
+		return (checkSouthEnemyMovement(coord) || checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
+	}
+
+	private boolean anEnemyCanMoveWest(int[] coord) {
+		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkEastEnemyMovement(coord));
+	}
+
+	private boolean anEnemyCanMoveEast(int[] coord) {
+		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord) || checkWestEnemyMovement(coord));
+	}
+
+
+	private boolean anEnemyCanMoveHere(int[] coord) {
+		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord)
+				|| checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
+	}
+
+	private boolean checkNorthEnemyMovement(int[] coord) {
+		int x = coord[0];
+		int y = coord[1];
+		for(int i = x; i>=0; i--) {
+			Pawn up = this.getPawn(i,y);
+			if(!up.equalsPawn("O"))
+				if(up.equalsPawn("B"))
+					return true;
+				else return false;
+
+		}
+
+		return false;
+
+	}
+
+	private boolean checkSouthEnemyMovement(int[] coord) {
+		int x = coord[0];
+		int y = coord[1];
+
+		for(int i = x; i<9; i++) {
+			Pawn down = this.getPawn(i,y);
+			if(!down.equalsPawn("O"))
+				if(down.equalsPawn("B"))
+					return true;
+				else return false;
+
+		}
+
+		return false;
+
+	}
+
+	private boolean checkWestEnemyMovement(int[] coord) {
+		int x = coord[0];
+		int y = coord[1];
+
+		for(int i = y; i>=0; i--) {
+			Pawn left = this.getPawn(x,i);
+			if(!left.equalsPawn("O"))
+				if(left.equalsPawn("B"))
+					return true;
+				else return false;
+
+		}
+
+		return false;
+	}
+
+	private boolean checkEastEnemyMovement(int[] coord) {
+		int x = coord[0];
+		int y = coord[1];
+
+		for(int i = y; i<9; i++) {
+			Pawn right = this.getPawn(x,i);
+			if(!right.equalsPawn("O"))
+				if(right.equalsPawn("B"))
+					return true;
+				else return false;
+
+		}
+
+		return false;
+	}
+
+	public int enemiesNearKing() {
+
+		int enemies = 0;
+
+		if(kingCoord[0] == -1) {
+			kingCoord = getKingCoord();
+		}
+
+		int x = kingCoord[0] - 2 >= 0 ? kingCoord[0] - 2 : (kingCoord[0] - 1 >= 0 ? kingCoord[0] - 1 : kingCoord[0]);
+		int y = kingCoord[1] - 2 >= 0 ? kingCoord[1] - 2 : (kingCoord[1] - 1 >= 0 ? kingCoord[1] - 1 : kingCoord[1]);
+
+		for (int i = x; i < x + 5 && i < board.length; i++) {
+			for (int j = y; j < y + 5 && j < board.length; j++) {
+				if (this.getPawn(i, j).equalsPawn(Pawn.BLACK.toString())) {
+					enemies++;
+				}
+			}
+		}
+
+		return enemies;
+
+	}
+
+
 
 }
