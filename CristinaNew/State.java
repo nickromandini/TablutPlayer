@@ -604,5 +604,25 @@ public abstract class State {
 		return true;
 	}
 
+	public int minKingDistanceFromSafe() {
+		int minDist = 19;
+		int temp;
+		List<int[]> escapePoints = Stream.of(new int[]{0,0}, new int[]{1,0}, new int[]{2,0},
+				new int[]{6,0}, new int[]{7,0}, new int[]{8,0},
+				new int[]{0,1}, new int[]{0,2},
+				new int[]{0,6}, new int[]{0,7}, new int[]{0,8},
+				new int[]{1,8}, new int[]{2,8},
+				new int[]{6,8}, new int[]{7,8}, new int[]{8,8},
+				new int[]{8,7}, new int[]{8,6},
+				new int[]{8,2}, new int[]{8,1}, new int[]{8,0}).collect(Collectors.toList());
+		for(int[] coord : escapePoints) {
+			temp = Math.abs(this.kingCoord[0] - coord[0]) + Math.abs(this.kingCoord[1] - coord[1]);
+			if (temp < minDist)
+				minDist = temp;
+		}
+		return minDist;
+	}
+	
+	
 
 }
