@@ -201,7 +201,12 @@ public class Evaluation {
             
         } else if (me.equals("W")) {*/
 
-                if (state.kingOnEscapePoint())
+               
+    	
+    				// Situazioni positive per Bionda
+    				int value = 0;
+    				
+    				if (state.kingOnEscapePoint())
                     return 10000;
 
                 if (state.kingCanEscape( "NORTH") || state.kingCanEscape("SOUTH") || state.kingCanEscape("WEST") || state.kingCanEscape("EAST")) {
@@ -210,12 +215,11 @@ public class Evaluation {
 
                 // Non funziona bene
                 if(enemyPawnEatable(state, "W")) {
-                    return ThreadLocalRandom.current().nextInt(1000,  2001);
+                    value = ThreadLocalRandom.current().nextInt(1000,  2001);
                 }
-
-				/*if(enemyPawnEatable(state, "W")) {
-					return ThreadLocalRandom.current().nextInt(1000,  2001);
-				}*/
+                
+                value += state.minKingDistanceFromSafe();
+				
 
 				if(state.isTerminalBlack())
 					return -10000;
@@ -225,7 +229,7 @@ public class Evaluation {
 					return -ThreadLocalRandom.current().nextInt(9000,  9500);
 
 				//Altri casi
-				return ThreadLocalRandom.current().nextInt(0,  1000);
+				return value;
 
 
 
