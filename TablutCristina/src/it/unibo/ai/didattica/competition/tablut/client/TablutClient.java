@@ -1,18 +1,17 @@
 package it.unibo.ai.didattica.competition.tablut.client;
 
+import com.google.gson.Gson;
+import it.unibo.ai.didattica.competition.tablut.domain.Action;
+import it.unibo.ai.didattica.competition.tablut.domain.State;
+import it.unibo.ai.didattica.competition.tablut.domain.StateTablut;
+import it.unibo.ai.didattica.competition.tablut.util.StreamUtils;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
-
-import com.google.gson.Gson;
-
-import it.unibo.ai.didattica.competition.tablut.domain.Action;
-import it.unibo.ai.didattica.competition.tablut.domain.State;
-import it.unibo.ai.didattica.competition.tablut.domain.StateTablut;
-import it.unibo.ai.didattica.competition.tablut.util.StreamUtils;
 
 /**
  * Classe astratta di un client per il gioco Tablut

@@ -47,4 +47,7 @@ public class StreamUtils {
 		// Converto i bytes in stringa
 		return new String(bytes, StandardCharsets.UTF_8);
 	}
+
+
+
 }

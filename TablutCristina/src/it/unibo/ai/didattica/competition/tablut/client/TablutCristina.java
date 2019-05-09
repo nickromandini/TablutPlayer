@@ -1,19 +1,18 @@
 package it.unibo.ai.didattica.competition.tablut.client;
 
+import it.unibo.ai.didattica.competition.tablut.domain.*;
+import it.unibo.ai.didattica.competition.tablut.domain.State.Turn;
+
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import it.unibo.ai.didattica.competition.tablut.domain.*;
-import it.unibo.ai.didattica.competition.tablut.domain.State.Turn;
 
 
 public class TablutCristina extends TablutClient {
@@ -22,6 +21,7 @@ public class TablutCristina extends TablutClient {
 
     private long timeMs;
     private long timeoutValue = 30000;
+    private int turn = 0;
 
     public TablutCristina(String player, String name, int gameChosen) throws UnknownHostException, IOException {
         super(player, name);
@@ -102,7 +102,6 @@ public class TablutCristina extends TablutClient {
                 System.exit(4);
         }
 
-        List<int[]> pawns = new ArrayList<int[]>();
         System.out.println("You are player " + this.getPlayer().toString() + "!");
 
         while (true) {
@@ -113,6 +112,7 @@ public class TablutCristina extends TablutClient {
                 e1.printStackTrace();
                 System.exit(1);
             }
+            turn++;
             this.timeMs = System.currentTimeMillis();
             System.out.println("Current state:");
             state = this.getCurrentState();
@@ -125,7 +125,7 @@ public class TablutCristina extends TablutClient {
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
                     state.move(a);
-                    System.out.println("mia pedina mangiabile " + state.enemyPawnEatable("B"));
+                    System.out.println("mia pedina mangiabile " + state.enemyPawnCanBeEaten("B"));
                     System.out.println("re mangiabile " + state.kingCanBeEaten());
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
@@ -134,7 +134,6 @@ public class TablutCristina extends TablutClient {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    pawns.clear();
 
                 }
                 // � il turno dell'avversario
@@ -227,20 +226,36 @@ public class TablutCristina extends TablutClient {
 
 
 
-        double numThread = Runtime.getRuntime().availableProcessors() / 2.0;
+        /*double numThread = Runtime.getRuntime().availableProcessors() / 2.0;
 
         System.out.println("creo " + numThread + " thread");
 
-        ForkJoinPool fjp = new ForkJoinPool((int)numThread);
+        ForkJoinPool fjp = new ForkJoinPool((int)numThread);*/
 
 
         List<Action> actionList = new ArrayList<>(actions.descendingMap().values());//actions.descendingMap().values().stream().collect(Collectors.toList());
 
-        MinMaxTask mmt = new MinMaxTask(false, numThread, actionList, state,depth,new Evaluation(), timeMs, timeoutValue);
+        AtomicReference<List<Result>> res = new AtomicReference<>(new ArrayList<>());
+        Evaluation evaluator = new Evaluation();
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        AtomicInteger v = new AtomicInteger(-2000);
+        AtomicReference<Action> a = new AtomicReference<>();
+        actionList.parallelStream().forEach(action -> {
+            int temp = maxValue(resultState(state, action), -20000, 20000, depth, evaluator, atomicInteger);
+            if( temp > v.get() ) {
+                v.set(temp);
+                a.set(action);
+                //res.get().add(new Result(temp,action));
+            }
+        });
 
-        Result res = fjp.invoke(mmt);
-        
-        System.out.println("Azione minmax valore " + res.value);
+        /*MinMaxTask mmt = new MinMaxTask(false, numThread, actionList, state,depth,new Evaluation(), timeMs, timeoutValue);
+
+        Result res1 = fjp.invoke(mmt);*/
+
+        //Result fin = res.get().stream().max(Comparator.comparing(Result::getValue)).get();
+
+        //System.out.println("Tagli " + atomicInteger.get());
 
         /*
         int v;
@@ -255,9 +270,66 @@ public class TablutCristina extends TablutClient {
         }
         */
 
-        return res.getAction();
+        return a.get();//fin.getAction();
     }
 
+    private int maxValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+        if(state.isTerminalWhite()) {
+            return 10000;
+        } else if(state.isTerminalBlack()){
+            return -10000;
+        } else if(depth > 5 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
+            return evaluator.evaluate(state, turn);
+        }
+
+
+
+        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
+
+        int v = -20000;
+        for (Action action : actions.descendingMap().values()) {
+            v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+            if (v >= beta) {
+                //atomicInteger.incrementAndGet();
+                return v;
+            }
+            alpha = Math.max(alpha, v);
+        }
+        return v;
+    }
+
+    private int minValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+
+
+        if(state.isTerminalWhite()) {
+            return 10000;
+        } else if(state.isTerminalBlack()){
+            return -10000;
+        } else if (depth > 5 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
+            return evaluator.evaluate(state, turn);
+        }
+        //return 1000, 0 o -1000 a seconda del caso
+
+        //else continua
+        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
+
+        int v = 20000;
+        for (Action action : actions.values()) {
+            v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+            if (v <= alpha) {
+                //atomicInteger.incrementAndGet();
+                return v;
+            }
+            beta = Math.max(beta, v);
+        }
+        return v;
+    }
+
+    private State resultState(State state, Action action) {
+        State returnState = state.clone();
+        returnState.move(action);
+        return returnState;
+    }
     private final class Result {
 
         private int value;
@@ -275,7 +347,10 @@ public class TablutCristina extends TablutClient {
         public Action getAction() {
             return action;
         }
+
+
     }
+    /*
 
 
 
@@ -375,7 +450,7 @@ public class TablutCristina extends TablutClient {
                 tasks.add(new MinMaxTask(true, actions.subList(5 * limit, 6 * limit), state, depth, evaluator, timeMs, timeout, ai));
                 tasks.add(new MinMaxTask(true, actions.subList(6 * limit, 7 * limit), state, depth, evaluator, timeMs, timeout, ai));
                 tasks.add(new MinMaxTask(true, actions.subList(7 * limit, actions.size()), state, depth, evaluator, timeMs, timeout,ai));
-                */
+                *//*
                 tasks.forEach( task -> task.fork());
 
                 for(MinMaxTask t : tasks) {
@@ -449,5 +524,6 @@ public class TablutCristina extends TablutClient {
             return returnState;
         }
     }
+    */
 
 }

@@ -1,15 +1,6 @@
 package it.unibo.ai.didattica.competition.tablut.domain;
 
-import it.unibo.ai.didattica.competition.tablut.domain.Action;
-import it.unibo.ai.didattica.competition.tablut.domain.State;
-import it.unibo.ai.didattica.competition.tablut.exceptions.ActionException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.BoardException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.ClimbingException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.DiagonalException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.OccupitedException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.PawnException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.StopException;
-import it.unibo.ai.didattica.competition.tablut.exceptions.ThroneException;
+import it.unibo.ai.didattica.competition.tablut.exceptions.*;
 
 /**
  * Tablut che segue le regole moderne
@@ -248,8 +239,8 @@ public class GameModernTablut implements Game {
 						|| state.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K"))
 				&& (state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
 						|| state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T"))) {
-			// nero-re-trono N.B. No indexOutOfBoundException perchè se il re si
-			// trovasse sul bordo il giocatore bianco avrebbe già vinto
+			// nero-re-trono N.B. No indexOutOfBoundException perchï¿½ se il re si
+			// trovasse sul bordo il giocatore bianco avrebbe giï¿½ vinto
 			if (state.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K")
 					&& state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T")) {
 				// ho circondato il re?

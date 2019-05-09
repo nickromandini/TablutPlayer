@@ -1,5 +1,7 @@
 package it.unibo.ai.didattica.competition.tablut.domain;
 
+import it.unibo.ai.didattica.competition.tablut.exceptions.*;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,8 +12,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import it.unibo.ai.didattica.competition.tablut.exceptions.*;
 
 /**
  * 
@@ -722,8 +722,8 @@ public class GameAshtonTablut implements Game {
 				&& (state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
 						|| state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T")
 						|| this.citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() + 2)))) {
-			// nero-re-trono N.B. No indexOutOfBoundException perchè se il re si
-			// trovasse sul bordo il giocatore bianco avrebbe già vinto
+			// nero-re-trono N.B. No indexOutOfBoundException perchï¿½ se il re si
+			// trovasse sul bordo il giocatore bianco avrebbe giï¿½ vinto
 			if (state.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K")
 					&& state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T")) {
 				// ho circondato su 3 lati il re?

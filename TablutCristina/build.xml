@@ -11,7 +11,10 @@
         <mkdir dir="build"/>
         <javac encoding="iso-8859-1" srcdir="src" 
             destdir="build"
-            classpath="lib/gson-2.2.2.jar" />
+            classpath="lib/gson-2.2.2.jar"/>
+        <javac encoding="iso-8859-1" srcdir="src"
+               destdir="build"
+               classpath="lib/jython-standalone-2.7.0.jar"/>
         <copy todir="build">
             <fileset dir="src" excludes="*.java"/>
         </copy>

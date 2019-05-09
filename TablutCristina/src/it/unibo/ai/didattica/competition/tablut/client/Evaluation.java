@@ -2,18 +2,15 @@ package it.unibo.ai.didattica.competition.tablut.client;
 
 import it.unibo.ai.didattica.competition.tablut.domain.Action;
 import it.unibo.ai.didattica.competition.tablut.domain.State;
-import it.unibo.ai.didattica.competition.tablut.domain.StateTablut;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class Evaluation {
 
-	private List<String> citadels = new ArrayList<String>();
+	private List<String> citadels = new ArrayList<>();
 
 	public Evaluation() {
 
@@ -45,14 +42,14 @@ public class Evaluation {
 				if (state.kingOnEscapePoint(new int[]{a.getRowTo(), a.getColumnTo()}))
 					return 10000;
 
-				if (state.kingCanEscape(new int[]{a.getRowTo(), a.getColumnTo()}, "NORTH") || state.kingCanEscape(new int[]{a.getRowTo(), a.getColumnTo()}, "SOUTH") || state.kingCanEscape(new int[]{a.getRowTo(), a.getColumnTo()}, "WEST") || state.kingCanEscape(new int[]{a.getRowTo(), a.getColumnTo()}, "EAST")) {
+				if (state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "NORTH") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "SOUTH") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "WEST") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "EAST")) {
 					return ThreadLocalRandom.current().nextInt(9000,  9500);
 				}
 
 				return ThreadLocalRandom.current().nextInt(5000,  6000);
 
 
-			} else {
+			/*} else {
 
 				// Controllo se posso mangiare una pedina con la mossa da valutare
 
@@ -131,7 +128,7 @@ public class Evaluation {
 							return ThreadLocalRandom.current().nextInt(1000, 2001);
 						}
 
-				}
+				}*/
 
 
 
@@ -142,8 +139,8 @@ public class Evaluation {
 			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
 				return ThreadLocalRandom.current().nextInt(9000,  9500);
 
-			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
-				return ThreadLocalRandom.current().nextInt(1000, 2001);
+			/*if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
+				return ThreadLocalRandom.current().nextInt(1000, 2001);*/
 
 		}
 		return ThreadLocalRandom.current().nextInt(0,  1000);
@@ -152,73 +149,58 @@ public class Evaluation {
 
 	private boolean checkNorth(State.Pawn north, State state, Action a) {
 		if (north.equalsPawn("B") && !state.onCitadels(new int[]{a.getRowTo() - 1, a.getColumnTo()})) {
-			if (state.onCitadelsBorder(new int[]{a.getRowTo() - 2, a.getColumnTo()}) || state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("W"))
-				return true;
+			return (state.onCitadelsBorder(new int[]{a.getRowTo() - 2, a.getColumnTo()}) || state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("W"));
 		}
 		return false;
 	}
 
 	private boolean checkSouth(State.Pawn south, State state, Action a) {
 		if(south.equalsPawn("B") && !state.onCitadels(new int[]{a.getRowTo() + 1, a.getColumnTo()})) {
-			if (state.onCitadelsBorder(new int[]{a.getRowTo() + 2, a.getColumnTo()}) || state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("W"))
-				return true;
+			return (state.onCitadelsBorder(new int[]{a.getRowTo() + 2, a.getColumnTo()}) || state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("W"));
 		}
 		return false;
 	}
 
 	private boolean checkWest(State.Pawn west, State state, Action a) {
 		if (west.equalsPawn("B") && !state.onCitadels(new int[]{a.getRowTo(), a.getColumnTo() - 1})) {
-			if (state.onCitadelsBorder(new int[]{a.getRowTo(), a.getColumnTo() - 2}) || state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("W"))
-				return true;
+			return (state.onCitadelsBorder(new int[]{a.getRowTo(), a.getColumnTo() - 2}) || state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("W"));
 		}
 		return false;
 	}
 
 	private boolean checkEast(State.Pawn east, State state, Action a) {
 		if(east.equalsPawn("B") && !state.onCitadels(new int[]{a.getRowTo(), a.getColumnTo() + 1})) {
-			if (state.onCitadelsBorder(new int[]{a.getRowTo(), a.getColumnTo() + 2}) || state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("W"))
-				return true;
+			return (state.onCitadelsBorder(new int[]{a.getRowTo(), a.getColumnTo() + 2}) || state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("W"));
 		}
 		return false;
 	}
 
 
-	public int evaluate(State state) {
-
-        /*if(state.getTurn().equalsTurn(State.Turn.BLACK.toString())) {
-
-
-        		//if il re è stato mangiato
-        		if(state.isTerminalBlack())
-        			return 10000;
-
-        		//if il re sta per essere mangiato
-        		if(state.kingEatable() || state.isKingEated())
-         		return ThreadLocalRandom.current().nextInt(9000,  9500);
-
-        		//Altri casi
-        		return ThreadLocalRandom.current().nextInt(0,  1000);
-
-        } else if (me.equals("W")) {*/
-
-
+	public int evaluate(State state, int turn) {
 
 		// Situazioni positive per Bionda
 		int value = 0;
 
-		if (state.kingOnEscapePoint())
+		if (state.isTerminalWhite())
 			return 10000;
 
 		if (state.kingCanEscape( "NORTH") || state.kingCanEscape("SOUTH") || state.kingCanEscape("WEST") || state.kingCanEscape("EAST")) {
-			return ThreadLocalRandom.current().nextInt(9000,  9500);
+			value += 200;
 		}
+
+		if(state.kingCanEscapeInTwoMoves())
+			value += 100;
 
 		// Non funziona bene
-		if(enemyPawnEatable(state, "W")) {
-			value = ThreadLocalRandom.current().nextInt(1000,  2001);
+		if(state.enemyPawnEatable("W")) {
+			value += 50 * (turn < 5 ? 2 : 1);
 		}
 
-		value += (5000 * 1.0/state.minKingDistanceFromSafe());
+		if(state.enemyPawnCanBeEaten("W")) {
+			value += 30 * (turn < 5 ? 2 : 1);
+		}
+
+		value += (25 * 1.0/state.minKingDistanceFromSafe());
 
 
 		if(state.isTerminalBlack())
@@ -226,30 +208,28 @@ public class Evaluation {
 
 		//if il re sta per essere mangiato
 		if(state.kingCanBeEaten()/* || state.isKingEated()*/)
-			return -ThreadLocalRandom.current().nextInt(9000,  9500);
+			value -= 200;
 
-		if(enemyPawnEatable(state, "B"))
-			value -= ThreadLocalRandom.current().nextInt(800,  900);
+		if(state.enemyPawnEatable("B"))
+			value -= 50 * (turn < 5 ? 3 : 2);
 
-		value -= (250 * state.enemiesNearKing());
+		if(state.enemyPawnCanBeEaten("B")) {
+			value -= 30 * (turn < 5 ? 3 : 2);
+		}
 
+		value -= (5 * state.enemiesNearKing());
 
 		//Altri casi
 		return value;
 
-
-
-
-
-		//}
-
-		//return 0;
 	}
 
 
 	private boolean enemyPawnEatable(State state, String me) {
 
-		List<int[]> enemyPawns = state.getEnemyPawnsCoord();
+		String enemy = me.equals("W") ? "BLACK" : "WHITE";
+
+		List<int[]> enemyPawns = state.getEnemyPawnsCoord(enemy);
 
 		boolean northBorder = false;
 		boolean southBorder = false;
@@ -374,11 +354,8 @@ public class Evaluation {
 					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e4")
 					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("f5"))
 			{
-				if(state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()-2)))
-				{
-					return true;
-				}
+				return (state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()-2)));
 			}
 		}
 		return false;
@@ -429,11 +406,8 @@ public class Evaluation {
 					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e4")
 					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e5"))
 			{
-				if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()+2)))
-				{
-					return true;
-				}
+				return (state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()+2)));
 			}
 		}
 		return false;
@@ -484,11 +458,8 @@ public class Evaluation {
 					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("f5")
 					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e5"))
 			{
-				if(state.getPawn(a.getRowTo()+2, a.getColumnTo()).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo()+2, a.getColumnTo())))
-				{
-					return true;
-				}
+				return (state.getPawn(a.getRowTo()+2, a.getColumnTo()).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo()+2, a.getColumnTo())));
 			}
 		}
 		return false;
@@ -539,11 +510,8 @@ public class Evaluation {
 					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("f5")
 					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e5"))
 			{
-				if(state.getPawn(a.getRowTo()-2, a.getColumnTo()).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo()-2, a.getColumnTo())))
-				{
-					return true;
-				}
+				return (state.getPawn(a.getRowTo()-2, a.getColumnTo()).equalsPawn("B")
+						|| citadels.contains(state.getBox(a.getRowTo()-2, a.getColumnTo())));
 			}
 		}
 		return false;
@@ -565,10 +533,7 @@ public class Evaluation {
 			{
 				return true;
 			}
-			if(state.getBox(a.getRowTo(), a.getColumnTo()+2).equals("e5"))
-			{
-				return true;
-			}
+			return (state.getBox(a.getRowTo(), a.getColumnTo()+2).equals("e5"));
 
 		}
 
@@ -577,44 +542,32 @@ public class Evaluation {
 
 	private boolean checkCaptureBlackPawnLeft(State state, Action a){
 		//mangio a sinistra
-		if (a.getColumnTo() > 1
+		return (a.getColumnTo() > 1
 				&& state.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("W")
 				&& (state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
 				|| state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T")
 				|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() - 2))
-				|| (state.getBox(a.getRowTo(), a.getColumnTo()-2).equals("e5"))))
-		{
-			return true;
-		}
-		return false;
+				|| (state.getBox(a.getRowTo(), a.getColumnTo()-2).equals("e5"))));
 	}
 
 	private boolean checkCaptureBlackPawnUp(State state, Action a){
 		// controllo se mangio sopra
-		if (a.getRowTo() > 1
+		return (a.getRowTo() > 1
 				&& state.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("W")
 				&& (state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("B")
 				|| state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T")
 				|| citadels.contains(state.getBox(a.getRowTo() - 2, a.getColumnTo()))
-				|| (state.getBox(a.getRowTo()-2, a.getColumnTo()).equals("e5"))))
-		{
-			return true;
-		}
-		return false;
+				|| (state.getBox(a.getRowTo()-2, a.getColumnTo()).equals("e5"))));
 	}
 
 	private boolean checkCaptureBlackPawnDown(State state, Action a){
 		// controllo se mangio sotto
-		if (a.getRowTo() < state.getBoard().length - 2
+		return  (a.getRowTo() < state.getBoard().length - 2
 				&& state.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("W")
 				&& (state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("B")
 				|| state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T")
 				|| citadels.contains(state.getBox(a.getRowTo() + 2, a.getColumnTo()))
-				|| (state.getBox(a.getRowTo()+2, a.getColumnTo()).equals("e5"))))
-		{
-			return true;
-		}
-		return false;
+				|| (state.getBox(a.getRowTo()+2, a.getColumnTo()).equals("e5"))));
 	}
 
 
