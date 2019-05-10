@@ -4,10 +4,7 @@ import it.unibo.ai.didattica.competition.tablut.client.Evaluation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -302,7 +299,11 @@ public abstract class State {
 
 
 	public TreeMap<Integer,Action> getAllLegalMoves() {
-		TreeMap<Integer,Action> actions = new TreeMap<>();
+		TreeMap<Integer,Action> actions;
+		if(getTurn().equalsTurn(Turn.WHITE.toString()))
+			 actions = new TreeMap<>(Collections.reverseOrder());
+		else
+			actions = new TreeMap<>();
 
 		for(int[] coordPawn : this.getPawnsCoord()) {
 			actions.putAll(getAllLegalMovesInDirection(coordPawn, "NORTH"));
@@ -316,7 +317,12 @@ public abstract class State {
 
 	private TreeMap<Integer,Action> getAllLegalMovesInDirection(int[] coordPawn, String direction) {
 
-		TreeMap<Integer,Action> actionsEvaluated = new TreeMap<>();
+		TreeMap<Integer,Action> actionsEvaluated;
+		if(getTurn().equalsTurn(Turn.WHITE.toString()))
+			actionsEvaluated = new TreeMap<>(Collections.reverseOrder());
+		else
+			actionsEvaluated = new TreeMap<>();
+
 		int x = coordPawn[0];
 		int y = coordPawn[1];
 		Evaluation evaluator = new Evaluation();
@@ -617,11 +623,11 @@ public abstract class State {
 	}
 
 	public boolean onCitadelsBorder(int[] coord) {
-		return citadelsBorders.parallelStream().anyMatch(a -> Arrays.equals(a, coord));
+		return citadelsBorders.stream().anyMatch(a -> Arrays.equals(a, coord));
 	}
 
 	public boolean onCitadels(int[] coord) {
-		return citadels.parallelStream().anyMatch(a -> Arrays.equals(a, coord));
+		return citadels.stream().anyMatch(a -> Arrays.equals(a, coord));
 	}
 
 	public boolean kingOnEscapePoint() {
@@ -632,15 +638,7 @@ public abstract class State {
 	}
 
 	public boolean kingOnEscapePoint(int[] coord) {
-		List<int[]> escapePoints = Stream.of(new int[]{0,0}, new int[]{1,0}, new int[]{2,0},
-				new int[]{6,0}, new int[]{7,0}, new int[]{8,0},
-				new int[]{0,1}, new int[]{0,2},
-				new int[]{0,6}, new int[]{0,7}, new int[]{0,8},
-				new int[]{1,8}, new int[]{2,8},
-				new int[]{6,8}, new int[]{7,8}, new int[]{8,8},
-				new int[]{8,7}, new int[]{8,6},
-				new int[]{8,2}, new int[]{8,1}, new int[]{8,0}).collect(Collectors.toList());
-		return escapePoints.parallelStream().anyMatch(a -> Arrays.equals(a, coord));
+		return escapePoints.stream().anyMatch(a -> Arrays.equals(a, coord));
 	}
 
 
@@ -1116,6 +1114,11 @@ public abstract class State {
 		return false;
 	}
 
+	private State resultState(Action action) {
+		State returnState = this.clone();
+		returnState.move(action);
+		return returnState;
+	}
 
 
 }

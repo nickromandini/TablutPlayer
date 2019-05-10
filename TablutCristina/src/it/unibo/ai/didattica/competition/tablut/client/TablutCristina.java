@@ -20,7 +20,7 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-    private long timeoutValue = 30000;
+    private long timeoutValue = 50000;
     private int turn = 0;
 
     public TablutCristina(String player, String name, int gameChosen) throws UnknownHostException, IOException {
@@ -228,34 +228,37 @@ public class TablutCristina extends TablutClient {
 
         /*double numThread = Runtime.getRuntime().availableProcessors() / 2.0;
 
-        System.out.println("creo " + numThread + " thread");
+        System.out.println("creo " + numThread + " thread");*/
 
-        ForkJoinPool fjp = new ForkJoinPool((int)numThread);*/
+        int numThread = Runtime.getRuntime().availableProcessors();
+
+        ForkJoinPool fjp = new ForkJoinPool(numThread);
 
 
         List<Action> actionList = new ArrayList<>(actions.descendingMap().values());//actions.descendingMap().values().stream().collect(Collectors.toList());
 
-        AtomicReference<List<Result>> res = new AtomicReference<>(new ArrayList<>());
+        /*AtomicReference<List<Result>> res = new AtomicReference<>(new ArrayList<>());
         Evaluation evaluator = new Evaluation();
         AtomicInteger atomicInteger = new AtomicInteger(0);
         AtomicInteger v = new AtomicInteger(-2000);
         AtomicReference<Action> a = new AtomicReference<>();
         actionList.parallelStream().forEach(action -> {
-            int temp = maxValue(resultState(state, action), -20000, 20000, depth, evaluator, atomicInteger);
+            atomicInteger.incrementAndGet();
+            int temp = maxValue(resultState(state, action), -20000, 20000, depth, atomicInteger);
             if( temp > v.get() ) {
                 v.set(temp);
                 a.set(action);
                 //res.get().add(new Result(temp,action));
             }
-        });
+        });*/
 
-        /*MinMaxTask mmt = new MinMaxTask(false, numThread, actionList, state,depth,new Evaluation(), timeMs, timeoutValue);
+        MinMaxTask mmt = new MinMaxTask(false, numThread, actionList, state,depth, timeMs, timeoutValue);
 
-        Result res1 = fjp.invoke(mmt);*/
+        Result res1 = fjp.invoke(mmt);
 
         //Result fin = res.get().stream().max(Comparator.comparing(Result::getValue)).get();
 
-        //System.out.println("Tagli " + atomicInteger.get());
+        //System.out.println("Nodi visitati " + atomicInteger.get());
 
         /*
         int v;
@@ -270,25 +273,27 @@ public class TablutCristina extends TablutClient {
         }
         */
 
-        return a.get();//fin.getAction();
+        return res1.getAction();//fin.getAction();
     }
 
-    private int maxValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+    /*
+
+    private int maxValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
         if(state.isTerminalWhite()) {
             return 10000;
         } else if(state.isTerminalBlack()){
             return -10000;
-        } else if(depth > 5 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
-            return evaluator.evaluate(state, turn);
+        } else if(depth > 6 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
+            return new Evaluation().evaluate(state, turn);
         }
 
-
+        atomicInteger.incrementAndGet();
 
         TreeMap<Integer, Action> actions = state.getAllLegalMoves();
 
         int v = -20000;
         for (Action action : actions.descendingMap().values()) {
-            v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+            v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
             if (v >= beta) {
                 //atomicInteger.incrementAndGet();
                 return v;
@@ -298,24 +303,24 @@ public class TablutCristina extends TablutClient {
         return v;
     }
 
-    private int minValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+    private int minValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
 
 
         if(state.isTerminalWhite()) {
             return 10000;
         } else if(state.isTerminalBlack()){
             return -10000;
-        } else if (depth > 5 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
-            return evaluator.evaluate(state, turn);
+        } else if (depth > 6 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
+            return new Evaluation().evaluate(state, turn);
         }
         //return 1000, 0 o -1000 a seconda del caso
-
+        atomicInteger.incrementAndGet();
         //else continua
         TreeMap<Integer, Action> actions = state.getAllLegalMoves();
 
         int v = 20000;
         for (Action action : actions.values()) {
-            v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+            v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
             if (v <= alpha) {
                 //atomicInteger.incrementAndGet();
                 return v;
@@ -330,6 +335,7 @@ public class TablutCristina extends TablutClient {
         returnState.move(action);
         return returnState;
     }
+    */
     private final class Result {
 
         private int value;
@@ -350,7 +356,9 @@ public class TablutCristina extends TablutClient {
 
 
     }
-    /*
+
+
+
 
 
 
@@ -361,42 +369,38 @@ public class TablutCristina extends TablutClient {
         private List<Action> actions;
         private State state;
         private int depth;
-        private Evaluation evaluator;
         private long timeMs;
         private long timeout;
         private AtomicInteger atomicInteger;
         private double numThread;
 
 
-        public MinMaxTask(boolean isChild, List<Action> actions, State state, int depth, Evaluation evaluator, long timeMs, long timeout, AtomicInteger atomicInteger) {
+        public MinMaxTask(boolean isChild, List<Action> actions, State state, int depth, long timeMs, long timeout, AtomicInteger atomicInteger) {
             this.isChild = isChild;
             this.actions = actions;
             this.state = state;
             this.depth = depth;
-            this.evaluator = evaluator;
             this.timeMs = timeMs;
             this.timeout = timeout;
             this.atomicInteger = atomicInteger;
         }
 
-        public MinMaxTask(boolean isChild, double numThread, List<Action> actions, State state, int depth, Evaluation evaluator, long timeMs, long timeout) {
+        public MinMaxTask(boolean isChild, double numThread, List<Action> actions, State state, int depth, long timeMs, long timeout) {
             this.isChild = isChild;
             this.actions = actions;
             this.state = state;
             this.depth = depth;
-            this.evaluator = evaluator;
             this.timeMs = timeMs;
             this.timeout = timeout;
             this.numThread = numThread;
         }
 
 
-        public MinMaxTask(boolean isChild, List<Action> actions, State state, int depth, Evaluation evaluator, long timeMs, long timeout) {
+        public MinMaxTask(boolean isChild, List<Action> actions, State state, int depth, long timeMs, long timeout) {
             this.isChild = isChild;
             this.actions = actions;
             this.state = state;
             this.depth = depth;
-            this.evaluator = evaluator;
             this.timeMs = timeMs;
             this.timeout = timeout;
         }
@@ -406,9 +410,7 @@ public class TablutCristina extends TablutClient {
 
 
 
-            List<MinMaxTask> tasks = new ArrayList<>();
-            int limit = (int)Math.round(actions.size() / numThread) ;
-            Result res = null;
+
 
             if(isChild) {
                 int v = -20000;
@@ -419,7 +421,7 @@ public class TablutCristina extends TablutClient {
                     atomicInteger.incrementAndGet();
 
                     //valuto azione e metto dentro struttura dati
-                    temp = maxValue(resultState(state, action), -20000, 20000, depth, evaluator, atomicInteger);
+                    temp = maxValue(resultState(state, action), -20000, 20000, depth, atomicInteger);
                     if( temp > v ) {
                         v = temp;
                         result = action;
@@ -432,13 +434,17 @@ public class TablutCristina extends TablutClient {
 
             } else {
 
+                List<MinMaxTask> tasks = new ArrayList<>();
+                int limit = (int)Math.round(actions.size() / numThread) ;
+                Result res = null;
+
                 AtomicInteger ai = new AtomicInteger(0);
 
                 for(int i = 0; i<numThread;i++) {
                     if(i + 1 == numThread)
-                        tasks.add(new MinMaxTask(true, actions.subList(i * limit, actions.size()), state, depth, evaluator, timeMs, timeout, ai));
+                        tasks.add(new MinMaxTask(true, actions.subList(i * limit, actions.size()), state, depth, timeMs, timeout, ai));
                     else
-                        tasks.add(new MinMaxTask(true, actions.subList(i * limit, ( i + 1 ) * limit), state, depth, evaluator, timeMs, timeout, ai));
+                        tasks.add(new MinMaxTask(true, actions.subList(i * limit, ( i + 1 ) * limit), state, depth, timeMs, timeout, ai));
 
                 }
 
@@ -450,7 +456,7 @@ public class TablutCristina extends TablutClient {
                 tasks.add(new MinMaxTask(true, actions.subList(5 * limit, 6 * limit), state, depth, evaluator, timeMs, timeout, ai));
                 tasks.add(new MinMaxTask(true, actions.subList(6 * limit, 7 * limit), state, depth, evaluator, timeMs, timeout, ai));
                 tasks.add(new MinMaxTask(true, actions.subList(7 * limit, actions.size()), state, depth, evaluator, timeMs, timeout,ai));
-                *//*
+                */
                 tasks.forEach( task -> task.fork());
 
                 for(MinMaxTask t : tasks) {
@@ -469,13 +475,13 @@ public class TablutCristina extends TablutClient {
 
         }
 
-        private int maxValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+        private int maxValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
             if(state.isTerminalWhite()) {
                 return 10000;
             } else if(state.isTerminalBlack()){
                 return -10000;
             } else if(depth > 5 || System.currentTimeMillis() - this.timeMs > timeout) {
-                return evaluator.evaluate(state);
+                return new Evaluation().evaluate(state, turn);
             }
 
             atomicInteger.incrementAndGet();
@@ -483,8 +489,8 @@ public class TablutCristina extends TablutClient {
             TreeMap<Integer, Action> actions = state.getAllLegalMoves();
 
             int v = -20000;
-            for (Action action : actions.descendingMap().values()) {
-                v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+            for (Action action : actions.values()) {
+                v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
                 if (v >= beta)
                     return v;
                 alpha = Math.max(alpha, v);
@@ -492,7 +498,7 @@ public class TablutCristina extends TablutClient {
             return v;
         }
 
-        private int minValue(State state, int alpha, int beta, int depth, Evaluation evaluator, AtomicInteger atomicInteger) {
+        private int minValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
 
 
             if(state.isTerminalWhite()) {
@@ -500,7 +506,7 @@ public class TablutCristina extends TablutClient {
             } else if(state.isTerminalBlack()){
                 return -10000;
             } else if (depth > 5 || System.currentTimeMillis() - this.timeMs > timeout) {
-                return evaluator.evaluate(state);
+                return new Evaluation().evaluate(state, turn);
             }
             //return 1000, 0 o -1000 a seconda del caso
 
@@ -510,7 +516,7 @@ public class TablutCristina extends TablutClient {
 
             int v = 20000;
             for (Action action : actions.values()) {
-                v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, evaluator, atomicInteger));
+                v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
                 if (v <= alpha)
                     return v;
                 beta = Math.max(beta, v);
@@ -524,6 +530,6 @@ public class TablutCristina extends TablutClient {
             return returnState;
         }
     }
-    */
+
 
 }
