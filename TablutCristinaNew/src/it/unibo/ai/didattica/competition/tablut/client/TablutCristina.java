@@ -114,6 +114,9 @@ public class TablutCristina extends TablutClient {
             System.out.println("Current state:");
             state = this.getCurrentState();
             System.out.println(state.toString());
+            
+            System.out.println("Marcatori del re: "+ state.numBlackBetweenKingAndEscape());
+           
 
             if (this.getPlayer().equals(Turn.WHITE)) {
                 // � il mio turno
@@ -159,7 +162,7 @@ public class TablutCristina extends TablutClient {
                 if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
-                    a.setValue(10);
+                    
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -213,6 +216,10 @@ public class TablutCristina extends TablutClient {
 
 
         if(actions.get(0).getValue() == 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
+            return actions.get(0);
+        }
+        
+        if(actions.get(0).getValue() == 10000 && state.getTurn().equalsTurn(Turn.BLACK.toString())) {
             return actions.get(0);
         }
 
@@ -515,7 +522,10 @@ public class TablutCristina extends TablutClient {
                 maxDepth++;
             }
             else if(depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
-                return Evaluation.evaluate(state, this.turn);
+                if(true)
+            			return Evaluation.evaluate(state, this.turn);
+                else
+                		return -Evaluation.evaluate(state, this.turn);
 
 
             atomicInteger.incrementAndGet();
@@ -571,3 +581,4 @@ public class TablutCristina extends TablutClient {
 
 
 }
+
