@@ -121,12 +121,53 @@ public class Evaluation {
 			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
 				return 200;
 
+			int markers = numKingMarking(state, a);
+			if (markers > 0)
+				return 150 * markers;
+			
 			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
 				return 100;
 
 		}
 		return 10;
 
+	}
+	
+	private static int numKingMarking(State state, Action a) {
+		int[] kingCoord = state.getKingCoord();
+		int result = 0;
+		int destRow = a.getRowTo();
+			for(int[] eCoord : state.getEscapePoints())
+				if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
+					if (kingCoord[1] > destRow && destRow > eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destRow) && isCleanHorizontal(state, kingCoord[0],destRow,kingCoord[1]))
+						result++;
+					else if(kingCoord[1] < destRow && destRow < eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destRow) && isCleanHorizontal(state, kingCoord[0],destRow,eCoord[1]))
+						result++;
+				}
+				else if (kingCoord[1] == eCoord[1] && eCoord[1] == destRow) {
+					if (kingCoord[0] > destRow && destRow > eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
+						result++;
+					else if(kingCoord[0] < destRow && destRow< eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
+						result++;
+				}
+					
+		return result;
+	}
+	
+	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
+		for (int i=start+1; i<end; i++) {
+			if(!state.getPawn(vertical, i).equalsPawn("O"))
+				return false;
+		}
+		return true;
+	}
+	
+	private static boolean isCleanVertical(State state, int horizontal, int start, int end) {
+		for (int i=start+1; i<end; i++) {
+			if(!state.getPawn(i, horizontal).equalsPawn("O"))
+				return false;
+		}
+		return true;
 	}
 
 	private static boolean checkNorth(State.Pawn north, State state, int rowTo, int columnTo) {
@@ -188,7 +229,7 @@ public class Evaluation {
 			return 10000;
 
 		if (state.kingCanEscape( "NORTH") || state.kingCanEscape("SOUTH") || state.kingCanEscape("WEST") || state.kingCanEscape("EAST")) {
-			value += 200;
+			value += 500;
 		}
 
 		if(state.kingCanEscapeInTwoMoves())
@@ -207,12 +248,20 @@ public class Evaluation {
 		value += (25 * 1.0/state.minKingDistanceFromSafe());
 
 
+		
+		//Situazioni favorevoli per la mora
 		if(state.isTerminalBlack())
 			return -10000;
 
 		//if il re sta per essere mangiato
 		if(state.kingCanBeEaten())
-			value -= 200;
+			value -= 2000;
+		
+		// Quante pedine sono a distanza <=2 dal re
+		value -= 1000 * state.blackPawnCloseToKing();
+
+		// Quante pedine bloccano il re per impedirgli la fuga
+		value -= 1000 * state.numBlackBetweenKingAndEscape();
 
 		if(state.enemyPawnEatable("B"))
 			value -= 70 * (turn < 5 ? 3 : 2);
@@ -223,11 +272,14 @@ public class Evaluation {
 
 		value -= (5 * state.enemiesNearKing());
 
-		//Altri casi
+		
+		
+		
 		return value;
 
 	}
-
+	
+	
 
 	private boolean enemyPawnEatable(State state, String me) {
 
