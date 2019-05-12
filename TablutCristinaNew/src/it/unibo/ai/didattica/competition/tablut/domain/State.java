@@ -92,6 +92,10 @@ public abstract class State {
 	public Pawn[][] getBoard() {
 		return board;
 	}
+	
+	public List<int[]> getEscapePoints() {
+		return escapePoints;
+	}
 
 	public String boardString() {
 		StringBuffer result = new StringBuffer();
@@ -518,7 +522,7 @@ public abstract class State {
 		for(int i = x - 1; i >= 0; i--) {
 			if(!getPawn(i,y).equalsPawn("O"))
 				return false;
-			if(kingCanEscape(i,x, "EAST") || kingCanEscape(i,x, "WEST"))
+			if(kingCanEscape(i,y, "EAST") || kingCanEscape(i,y, "WEST"))
 				return true;
 		}
 		return false;
@@ -528,7 +532,7 @@ public abstract class State {
 		for(int i = x + 1; i < 9; i++) {
 			if(!getPawn(i,y).equalsPawn("O"))
 				return false;
-			if(kingCanEscape(i,x, "EAST") || kingCanEscape(i,x, "WEST"))
+			if(kingCanEscape(i,y, "EAST") || kingCanEscape(i,y, "WEST"))
 				return true;
 		}
 		return false;
@@ -722,6 +726,59 @@ public abstract class State {
 		}
 
 		return (int)minDist;
+	}
+	
+	public int blackPawnCloseToKing() {
+		if(kingCoord[0] == -1) {
+			kingCoord = getKingCoord();
+		}
+		int result = 0;
+		int distanza = 9;
+		for (int[] pCoord : getPawnsCoord()) {
+			distanza = (int) Math.sqrt(Math.pow(Math.abs(this.kingCoord[0] - pCoord[0]), 2) + Math.pow(Math.abs(this.kingCoord[1] - pCoord[1]), 2));
+			if(distanza <= 2)
+				result++;
+		}
+		return result;
+	}
+	
+	public int numBlackBetweenKingAndEscape() {
+		if(kingCoord[0] == -1) {
+			kingCoord = getKingCoord();
+		}
+		int result = 0;
+		for (int[] pCoord : getPawnsCoord())
+			for(int[] eCoord : escapePoints)
+				if (kingCoord[0] == eCoord[0] && eCoord[0] == pCoord[0]) {
+					if (kingCoord[1] > pCoord[1] && pCoord[1] > eCoord[1] && isCleanHorizontal(kingCoord[0], eCoord[1],pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],kingCoord[1]))
+						result++;
+					else if(kingCoord[1] < pCoord[1] && pCoord[1] < eCoord[1] && isCleanHorizontal(kingCoord[0], kingCoord[1], pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],eCoord[1]))
+						result++;
+				}
+				else if (kingCoord[1] == eCoord[1] && eCoord[1] == pCoord[1]) {
+					if (kingCoord[0] > pCoord[0] && pCoord[0] > eCoord[0] && isCleanVertical(kingCoord[1],eCoord[0],pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],kingCoord[0]))
+						result++;
+					else if(kingCoord[0] < pCoord[0] && pCoord[0]< eCoord[0] && isCleanVertical(kingCoord[1], kingCoord[0], pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],eCoord[0]))
+						result++;
+				}
+		
+		return result;
+	}
+	
+	private boolean isCleanHorizontal(int vertical, int start, int end) {
+		for (int i=start+1; i<end; i++) {
+			if(!getPawn(vertical, i).equalsPawn("O"))
+				return false;
+		}
+		return true;
+	}
+	
+	private boolean isCleanVertical(int horizontal, int start, int end) {
+		for (int i=start+1; i<end; i++) {
+			if(!getPawn(i, horizontal).equalsPawn("O"))
+				return false;
+		}
+		return true;
 	}
 
 
