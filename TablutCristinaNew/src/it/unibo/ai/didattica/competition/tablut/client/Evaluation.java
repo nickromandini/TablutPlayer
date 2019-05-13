@@ -118,12 +118,16 @@ public class Evaluation {
 			}
 		}
 		else { // caso black
-			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
-				return 200;
-
+			
+			if (state.kingEatable())
+				return 10000;
+			
 			int markers = numKingMarking(state, a);
 			if (markers > 0)
-				return 150 * markers;
+				return 5000 * markers;
+			
+			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
+				return 1000;	
 			
 			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
 				return 100;
@@ -135,30 +139,41 @@ public class Evaluation {
 	
 	private static int numKingMarking(State state, Action a) {
 		int[] kingCoord = state.getKingCoord();
-		//0 = row
-		//1 = col
+		//indice 0 = row
+		//indice 1 = col
 		
 		int result = 0;
+		
+		//Valuto se marco il re con la mossa attuale
 		int destRow = a.getRowTo();
 		int destCol = a.getColumnTo();
 			for(int[] eCoord : state.getEscapePoints())
 				if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
-					if (kingCoord[1] > destCol && destCol > eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
+					if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
 						result++;
-					else if(kingCoord[1] < destCol && destCol < eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
+					else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
 						result++;
 				}
 				else if (kingCoord[1] == eCoord[1] && eCoord[1] == destCol) {
-					if (kingCoord[0] > destRow && destRow > eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
+					if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
 						result++;
-					else if(kingCoord[0] < destRow && destRow< eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
+					else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
 						result++;
 				}
-					
+			
+	    //Considero se il re sta già venendo marcato anche da altre pedine
+	    result += state.numBlackBetweenKingAndEscape();
+
+	    if (result>0)
+	    		System.out.println("Marcatori del re: "+result);			
+		
 		return result;
 	}
 	
 	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
+		if (start == end)
+			return true;
+		
 		for (int i=start+1; i<end; i++) {
 			if(!state.getPawn(vertical, i).equalsPawn("O"))
 				return false;
@@ -167,6 +182,9 @@ public class Evaluation {
 	}
 	
 	private static boolean isCleanVertical(State state, int horizontal, int start, int end) {
+		if (start == end)
+			return true;
+		
 		for (int i=start+1; i<end; i++) {
 			if(!state.getPawn(i, horizontal).equalsPawn("O"))
 				return false;
