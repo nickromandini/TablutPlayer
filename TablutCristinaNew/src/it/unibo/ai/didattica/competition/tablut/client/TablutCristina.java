@@ -581,4 +581,3 @@ public class TablutCristina extends TablutClient {
 
 
 }
-
