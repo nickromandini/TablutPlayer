@@ -676,7 +676,7 @@ public abstract class State {
 			Pawn west = this.getPawn(x, y - 1);
 			Pawn east = this.getPawn(x, y + 1);
 
-			if (x == 4 && y == 4) {
+			if (x == 4 && y == 4) { // Caso re nella torre
 				if (north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")) {
 					return true;
 				} else {
@@ -750,15 +750,15 @@ public abstract class State {
 		for (int[] pCoord : getPawnsCoord())
 			for(int[] eCoord : escapePoints)
 				if (kingCoord[0] == eCoord[0] && eCoord[0] == pCoord[0]) {
-					if (kingCoord[1] > pCoord[1] && pCoord[1] > eCoord[1] && isCleanHorizontal(kingCoord[0], eCoord[1],pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],kingCoord[1]))
+					if (kingCoord[1] > pCoord[1] && pCoord[1] >= eCoord[1] && isCleanHorizontal(kingCoord[0], eCoord[1],pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],kingCoord[1]))
 						result++;
-					else if(kingCoord[1] < pCoord[1] && pCoord[1] < eCoord[1] && isCleanHorizontal(kingCoord[0], kingCoord[1], pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],eCoord[1]))
+					else if(kingCoord[1] < pCoord[1] && pCoord[1] <= eCoord[1] && isCleanHorizontal(kingCoord[0], kingCoord[1], pCoord[1]) && isCleanHorizontal(kingCoord[0],pCoord[1],eCoord[1]))
 						result++;
 				}
 				else if (kingCoord[1] == eCoord[1] && eCoord[1] == pCoord[1]) {
-					if (kingCoord[0] > pCoord[0] && pCoord[0] > eCoord[0] && isCleanVertical(kingCoord[1],eCoord[0],pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],kingCoord[0]))
+					if (kingCoord[0] > pCoord[0] && pCoord[0] >= eCoord[0] && isCleanVertical(kingCoord[1],eCoord[0],pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],kingCoord[0]))
 						result++;
-					else if(kingCoord[0] < pCoord[0] && pCoord[0]< eCoord[0] && isCleanVertical(kingCoord[1], kingCoord[0], pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],eCoord[0]))
+					else if(kingCoord[0] < pCoord[0] && pCoord[0] <= eCoord[0] && isCleanVertical(kingCoord[1], kingCoord[0], pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],eCoord[0]))
 						result++;
 				}
 		
@@ -766,6 +766,8 @@ public abstract class State {
 	}
 	
 	private boolean isCleanHorizontal(int vertical, int start, int end) {
+		if (start == end)
+			return true;
 		for (int i=start+1; i<end; i++) {
 			if(!getPawn(vertical, i).equalsPawn("O"))
 				return false;
@@ -774,6 +776,8 @@ public abstract class State {
 	}
 	
 	private boolean isCleanVertical(int horizontal, int start, int end) {
+		if (start == end)
+			return true;
 		for (int i=start+1; i<end; i++) {
 			if(!getPawn(i, horizontal).equalsPawn("O"))
 				return false;
