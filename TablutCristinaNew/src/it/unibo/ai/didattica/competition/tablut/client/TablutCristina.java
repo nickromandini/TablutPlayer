@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 public class TablutCristina extends TablutClient {
@@ -41,7 +40,7 @@ public class TablutCristina extends TablutClient {
     public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
         int gametype = 4;
         String role = "";
-        String name = "cristina_chiaBOT";
+        String name = "CristinaChiaBOT";
         // TODO: change the behavior?
         if (args.length < 1) {
             System.out.println("You must specify which player you are (WHITE or BLACK)");
@@ -114,18 +113,12 @@ public class TablutCristina extends TablutClient {
             System.out.println("Current state:");
             state = this.getCurrentState();
             System.out.println(state.toString());
-            
-           
 
             if (this.getPlayer().equals(Turn.WHITE)) {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(Turn.WHITE)) {
-                	System.out.println("E' il mio turno");
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
-                    state.move(a);
-                    System.out.println("mia pedina mangiabile " + state.enemyPawnCanBeEaten("B"));
-                    System.out.println("re mangiabile " + state.kingCanBeEaten());
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -161,7 +154,6 @@ public class TablutCristina extends TablutClient {
                 if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
                     //List<Action> actionList = state.getAllLegalMoves();
                     Action a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
-                    
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -191,151 +183,29 @@ public class TablutCristina extends TablutClient {
 
     }
 
-    /*private Action getBestAction(List<Action> actions, State state) {
-        TreeMap<Integer, Action> actionMap = new TreeMap<Integer, Action>();
-        int i = 0;
-        for(Action a : actions) {
-            int value = Evaluation.evaluateAction(a, state );
-            actionMap.put(value + i, a);
-            i++;
-            if (value == 1000) {
-                break;
-            }
-        }
-        if(actionMap.descendingMap().firstEntry().getKey() < 500) {
-            System.out.println("Mossa random");
-            return actionMap.get(new Random().nextInt(actionMap.size()));
-        }
-        return actionMap.descendingMap().firstEntry().getValue();
-    }*/
 
     public Action alphaBetaSearch(State state) {
         List<Action> actions = state.getAllLegalMoves();
         //System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
 
-        if(actions.get(0).getValue() >= 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
+        if(actions.get(0).getValue() == 1000 && state.getTurn().equalsTurn(Turn.WHITE.toString()))
             return actions.get(0);
-        }
-        
-        if(actions.get(0).getValue() >= 10000 && state.getTurn().equalsTurn(Turn.BLACK.toString())) {
+        else if(actions.get(0).getValue() == 1000 && state.getTurn().equalsTurn(Turn.BLACK.toString()))
             return actions.get(0);
-        }
 
 
-
-
-
-        /*double numThread = Runtime.getRuntime().availableProcessors() / 2.0;
-
-        System.out.println("creo " + numThread + " thread");*/
 
         int numThread = Runtime.getRuntime().availableProcessors();
 
         ForkJoinPool fjp = new ForkJoinPool(numThread);
-
-
-        //List<Action> actionList = new ArrayList<>(actions.descendingMap().values());//actions.descendingMap().values().stream().collect(Collectors.toList());
-
-        /*AtomicReference<List<Result>> res = new AtomicReference<>(new ArrayList<>());
-        Evaluation evaluator = new Evaluation();
-        AtomicInteger atomicInteger = new AtomicInteger(0);
-        AtomicInteger v = new AtomicInteger(-2000);
-        AtomicReference<Action> a = new AtomicReference<>();
-        actionList.parallelStream().forEach(action -> {
-            atomicInteger.incrementAndGet();
-            int temp = maxValue(resultState(state, action), -20000, 20000, depth, atomicInteger);
-            if( temp > v.get() ) {
-                v.set(temp);
-                a.set(action);
-                //res.get().add(new Result(temp,action));
-            }
-        });*/
-
-        MinMaxTask mmt = new MinMaxTask(false, numThread, actions, state, timeMs, timeoutValue, turn);
+        MinMaxTask mmt = new MinMaxTask(false, numThread, actions, state, timeMs, timeoutValue, turn, state.getTurn().toString());
 
         Result res1 = fjp.invoke(mmt);
 
-        //Result fin = res.get().stream().max(Comparator.comparing(Result::getValue)).get();
-
-        //System.out.println("Nodi visitati " + atomicInteger.get());
-
-        /*
-        int v;
-
-        for (Action action : actions.descendingMap().values()) {
-            //valuto azione e metto dentro struttura dati
-            v = maxValue(resultState(state, action), -20000, 20000, depth);
-            evaluatedActions.put(v, action);
-            if (System.currentTimeMillis() - this.timeMs > 10000) {
-                return evaluatedActions.descendingMap().firstEntry().getValue();
-            }
-        }
-        */
-
-        return res1.getAction();//fin.getAction();
+        return res1.getAction();
     }
 
-    /*
-
-    private int maxValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
-        if(state.isTerminalWhite()) {
-            return 10000;
-        } else if(state.isTerminalBlack()){
-            return -10000;
-        } else if(depth > 6 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
-            return new Evaluation().evaluate(state, turn);
-        }
-
-        atomicInteger.incrementAndGet();
-
-        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
-
-        int v = -20000;
-        for (Action action : actions.descendingMap().values()) {
-            v = Math.max(v, minValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
-            if (v >= beta) {
-                //atomicInteger.incrementAndGet();
-                return v;
-            }
-            alpha = Math.max(alpha, v);
-        }
-        return v;
-    }
-
-    private int minValue(State state, int alpha, int beta, int depth, AtomicInteger atomicInteger) {
-
-
-        if(state.isTerminalWhite()) {
-            return 10000;
-        } else if(state.isTerminalBlack()){
-            return -10000;
-        } else if (depth > 6 || System.currentTimeMillis() - this.timeMs > timeoutValue) {
-            return new Evaluation().evaluate(state, turn);
-        }
-        //return 1000, 0 o -1000 a seconda del caso
-        atomicInteger.incrementAndGet();
-        //else continua
-        TreeMap<Integer, Action> actions = state.getAllLegalMoves();
-
-        int v = 20000;
-        for (Action action : actions.values()) {
-            v = Math.min(v, maxValue(resultState(state, action), alpha, beta, depth + 1, atomicInteger));
-            if (v <= alpha) {
-                //atomicInteger.incrementAndGet();
-                return v;
-            }
-            beta = Math.max(beta, v);
-        }
-        return v;
-    }
-
-    private State resultState(State state, Action action) {
-        State returnState = state.clone();
-        returnState.move(action);
-        return returnState;
-    }
-    */
     private final class Result {
 
         private int value;
@@ -354,13 +224,7 @@ public class TablutCristina extends TablutClient {
             return action;
         }
 
-
     }
-
-
-
-
-
 
 
     private final class MinMaxTask extends RecursiveTask<Result> {
@@ -375,9 +239,10 @@ public class TablutCristina extends TablutClient {
         private double numThread;
         private int turn;
         private boolean maxDepthAlreadyUpdated = false;
+        private String me;
 
 
-        public MinMaxTask(boolean isChild, List<Action> actions, State state, int maxDepth, long timeMs, long timeout, AtomicInteger atomicInteger, int turn) {
+        public MinMaxTask(boolean isChild, List<Action> actions, State state, int maxDepth, long timeMs, long timeout, AtomicInteger atomicInteger, int turn, String me) {
             this.isChild = isChild;
             this.actions = actions;
             this.state = state;
@@ -386,9 +251,10 @@ public class TablutCristina extends TablutClient {
             this.timeout = timeout;
             this.atomicInteger = atomicInteger;
             this.turn = turn;
+            this.me = me;
         }
 
-        public MinMaxTask(boolean isChild, double numThread, List<Action> actions, State state, long timeMs, long timeout, int turn) {
+        public MinMaxTask(boolean isChild, double numThread, List<Action> actions, State state, long timeMs, long timeout, int turn, String me) {
             this.isChild = isChild;
             this.actions = actions;
             this.state = state;
@@ -396,6 +262,7 @@ public class TablutCristina extends TablutClient {
             this.timeout = timeout;
             this.numThread = numThread;
             this.turn = turn;
+            this.me = me;
         }
 
 
@@ -413,8 +280,6 @@ public class TablutCristina extends TablutClient {
                 System.out.println(Thread.currentThread().getName() + " parto con azioni " + this.actions.size());
                 for (Action action : this.actions) {
 
-
-
                     this.atomicInteger.incrementAndGet();
 
                     //valuto azione e metto dentro struttura dati
@@ -424,7 +289,7 @@ public class TablutCristina extends TablutClient {
                         result = action;
                     }
                     if (System.currentTimeMillis() - this.timeMs > this.timeout) {
-                        System.out.println(Thread.currentThread().getName() + " termino");
+                        System.out.println(Thread.currentThread().getName() + " termino per timeout");
                         return new Result(v, result);
                     }
                 }
@@ -453,24 +318,24 @@ public class TablutCristina extends TablutClient {
                 for (int i = 1; i <= numThread; i++) {
                     System.out.println("from " + from + " to " + to + " limit " + limit);
                     if (i == numThread)
-                        tasks.add(new MinMaxTask(true, this.actions.subList(from, actions.size()), this.state, maxDepth, this.timeMs, this.timeout, ai, this.turn));
+                        tasks.add(new MinMaxTask(true, this.actions.subList(from, actions.size()), this.state, maxDepth, this.timeMs, this.timeout, ai, this.turn, this.me));
                     else {
-                        tasks.add(new MinMaxTask(true, this.actions.subList(from, to), this.state, maxDepth, this.timeMs, this.timeout, ai, this.turn));
+                        tasks.add(new MinMaxTask(true, this.actions.subList(from, to), this.state, maxDepth, this.timeMs, this.timeout, ai, this.turn, this.me));
                         if (i == (numThread / 4)) {
                             from = to;
                             limit = (int) Math.round(percentage2 * size);
                             to = from + limit;
-                            //maxDepth = 5;
+                            maxDepth = 4;
                         } else if (i == (numThread / 2)) {
                             from = to;
                             limit = (int) Math.round(percentage3 * size);
                             to = from + limit;
-                            //maxDepth = 5;
+                            maxDepth = 3;
                         } else if (i == 3 * (numThread / 4)) {
                             from = to;
                             limit = (int) Math.round(percentage4 * size);
                             to = from + limit;
-                            //maxDepth = 5;
+                            maxDepth = 3;
                         } else {
                             from = to;
                             to = to + limit;
@@ -478,15 +343,6 @@ public class TablutCristina extends TablutClient {
                     }
                 }
 
-                /*tasks.add(new MinMaxTask(true, actions.subList(0, limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(limit, 2 * limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(2 * limit, 3 * limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(3 * limit, 4 * limit), state, depth, evaluator, timeMs, timeout,ai));
-                tasks.add(new MinMaxTask(true, actions.subList(4 * limit, 5 * limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(5 * limit, 6 * limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(6 * limit, 7 * limit), state, depth, evaluator, timeMs, timeout, ai));
-                tasks.add(new MinMaxTask(true, actions.subList(7 * limit, actions.size()), state, depth, evaluator, timeMs, timeout,ai));
-                */
                 for(MinMaxTask t : tasks) {
                     t.fork();
                 }
@@ -521,13 +377,13 @@ public class TablutCristina extends TablutClient {
                 maxDepth++;
             }
             else if(depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
-                if(true)
-            			return Evaluation.evaluate(state, this.turn);
+                if(this.me.equals("W"))
+                    return Evaluation.evaluate(state, this.me, this.turn);
                 else
-                		return -Evaluation.evaluate(state, this.turn);
+                    return -Evaluation.evaluate(state, this.me, this.turn);
 
 
-            atomicInteger.incrementAndGet();
+            //atomicInteger.incrementAndGet();
 
             List<Action> actions = state.getAllLegalMoves();
 
@@ -553,11 +409,15 @@ public class TablutCristina extends TablutClient {
                 maxDepth++;
             }
             else if (depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
-                return Evaluation.evaluate(state, this.turn);
+                if(this.me.equals("W"))
+                    return Evaluation.evaluate(state, this.me, this.turn);
+                else
+                    return -Evaluation.evaluate(state, this.me, this.turn);
+
 
             //return 1000, 0 o -1000 a seconda del caso
 
-            atomicInteger.incrementAndGet();
+            //atomicInteger.incrementAndGet();
             //else continua
             List<Action> actions = state.getAllLegalMoves();
 

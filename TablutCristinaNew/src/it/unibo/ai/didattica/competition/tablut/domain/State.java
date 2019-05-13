@@ -92,10 +92,6 @@ public abstract class State {
 	public Pawn[][] getBoard() {
 		return board;
 	}
-	
-	public List<int[]> getEscapePoints() {
-		return escapePoints;
-	}
 
 	public String boardString() {
 		StringBuffer result = new StringBuffer();
@@ -288,6 +284,11 @@ public abstract class State {
 	}
 
 
+	public List<int[]> getEscapePoints() {
+		return escapePoints;
+	}
+
+
 	/*
 	 * Verifica che lo stato sia terminale
 	 */
@@ -310,7 +311,6 @@ public abstract class State {
 			actions.addAll(getAllLegalMovesInDirection(coordPawn, "WEST"));
 			actions.addAll(getAllLegalMovesInDirection(coordPawn, "EAST"));
 		}
-		
 		Collections.sort(actions);
 		return actions;
 	}
@@ -421,6 +421,7 @@ public abstract class State {
 		}
 
 
+
 		return actionsEvaluated;
 	}
 
@@ -507,6 +508,47 @@ public abstract class State {
 		}
 
 		return pawns;
+	}
+
+	public int[] numOfMyAndEnemyPawns(String me) {
+		int result[] = new int[2];
+		result[0] = 0;
+		result[1] = 0;
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board.length; j++) {
+				if (this.getPawn(i, j).equalsPawn(Pawn.WHITE.toString())
+						|| this.getPawn(i, j).equalsPawn(Pawn.KING.toString())) {
+					result[0]++;
+				} else {
+					result[1]++;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public int numOfPawns(String player) {
+		int result = 0;
+		if (player.equals("W")) {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board.length; j++) {
+					if (this.getPawn(i, j).equalsPawn(Pawn.WHITE.toString())
+							|| this.getPawn(i, j).equalsPawn(Pawn.KING.toString())) {
+						result++;
+					}
+				}
+			}
+		} else {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board.length; j++) {
+					if (this.getPawn(i, j).equalsPawn(Pawn.BLACK.toString()))
+						result++;
+				}
+			}
+		}
+
+		return result;
 	}
 
 
@@ -666,7 +708,6 @@ public abstract class State {
 
 	}
 
-	// Fatta male
 
 	public boolean kingEatable(int x, int y) {
 
@@ -676,7 +717,7 @@ public abstract class State {
 			Pawn west = this.getPawn(x, y - 1);
 			Pawn east = this.getPawn(x, y + 1);
 
-			if (x == 4 && y == 4) { // Caso re nella torre
+			if (x == 4 && y == 4) {
 				if (north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")) {
 					return true;
 				} else {
@@ -697,37 +738,7 @@ public abstract class State {
 
 	}
 
-	public boolean isKingEated() {
-		try {
-			if(getPawn(kingCoord[0], kingCoord[1]) != null)
-				return false;
-		} catch (Exception e) {
 
-		}
-		return true;
-	}
-
-	public int minKingDistanceFromSafe() {
-
-		if(kingCoord[0] == -1) {
-			kingCoord = getKingCoord();
-		}
-
-		double minDist = 100;
-		double temp;
-
-
-		for(int[] point : escapePoints) {
-			if(getPawn(point[0], point[1]).equalsPawn("O")) {
-				temp = Math.sqrt(Math.pow(Math.abs(this.kingCoord[0] - point[0]), 2) + Math.pow(Math.abs(this.kingCoord[1] - point[1]), 2));
-				if (temp < minDist)
-					minDist = temp;
-			}
-		}
-
-		return (int)minDist;
-	}
-	
 	public int blackPawnCloseToKing() {
 		if(kingCoord[0] == -1) {
 			kingCoord = getKingCoord();
@@ -741,7 +752,7 @@ public abstract class State {
 		}
 		return result;
 	}
-	
+
 	public int numBlackBetweenKingAndEscape() {
 		if(kingCoord[0] == -1) {
 			kingCoord = getKingCoord();
@@ -761,10 +772,10 @@ public abstract class State {
 					else if(kingCoord[0] < pCoord[0] && pCoord[0] <= eCoord[0] && isCleanVertical(kingCoord[1], kingCoord[0], pCoord[0]) && isCleanVertical(kingCoord[1],pCoord[0],eCoord[0]))
 						result++;
 				}
-		
+
 		return result;
 	}
-	
+
 	private boolean isCleanHorizontal(int vertical, int start, int end) {
 		if (start == end)
 			return true;
@@ -774,7 +785,7 @@ public abstract class State {
 		}
 		return true;
 	}
-	
+
 	private boolean isCleanVertical(int horizontal, int start, int end) {
 		if (start == end)
 			return true;
@@ -877,12 +888,12 @@ public abstract class State {
 				return true;
 		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
 			if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanArriveSouth(kingCoord, "BLACK"))
+					&& anEnemyCanArriveEast(kingCoord, "BLACK"))
 				return true;
-			else if(south.equalsPawn("B") && south.equalsPawn("B")
+			else if(south.equalsPawn("B") && east.equalsPawn("B")
 					&& anEnemyCanArriveWest(kingCoord, "BLACK"))
 				return true;
-			else if(south.equalsPawn("B") && west.equalsPawn("B")
+			else if(east.equalsPawn("B") && west.equalsPawn("B")
 					&& anEnemyCanArriveSouth(kingCoord, "BLACK"))
 				return true;
 		}

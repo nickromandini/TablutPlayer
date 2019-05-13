@@ -14,14 +14,28 @@ public class Evaluation {
 	public static int evaluateAction(Action a, State state, String direction) {
 
 		if (state.getTurn().equalsTurn(State.Turn.WHITE.toString())) {
+			int rowTo = a.getRowTo();
+			int columnTo = a.getColumnTo();
 			if (state.getPawn(a.getRowFrom(), a.getColumnFrom()).equalsPawn("K")) {
+				int escapePaths = 0;
 
-				if (state.kingOnEscapePoint(a.getRowTo(), a.getColumnTo()))
-					return 10000;
+				if (state.kingOnEscapePoint(rowTo, columnTo))
+					return 1000;
 
-				if (state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "NORTH") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "SOUTH") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "WEST") || state.kingCanEscape(a.getRowTo(), a.getColumnTo(), "EAST")) {
-					return 200;
-				}
+				if(state.kingCanEscape(rowTo, columnTo, "NORTH"))
+					escapePaths++;
+
+				if(state.kingCanEscape(rowTo, columnTo, "SOUTH"))
+					escapePaths++;
+
+				if(state.kingCanEscape(rowTo, columnTo, "WEST"))
+					escapePaths++;
+
+				if(state.kingCanEscape(rowTo, columnTo, "EAST"))
+					escapePaths++;
+
+				if(escapePaths > 0)
+					return escapePaths * 250;
 
 				return 150;
 
@@ -40,8 +54,7 @@ public class Evaluation {
 				State.Pawn west = null;
 				State.Pawn east = null;
 
-				int rowTo = a.getRowTo();
-				int columnTo = a.getColumnTo();
+
 
 				if(rowTo - 1 >= 0)
 					north = state.getPawn(a.getRowTo() - 1, a.getColumnTo());
@@ -118,17 +131,21 @@ public class Evaluation {
 			}
 		}
 		else { // caso black
-			
-			if (state.kingEatable())
-				return 10000;
-			
+
+			/*if(blockedKing(state, a))
+				return 500;*/
+
+			if(kingEatableWithAction(state, a))
+				return 1000;
+
 			int markers = numKingMarking(state, a);
 			if (markers > 0)
-				return 5000 * markers;
-			
+				return 250 * markers;
+
 			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
-				return 1000;	
-			
+				return 200;
+
+
 			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
 				return 100;
 
@@ -136,61 +153,198 @@ public class Evaluation {
 		return 10;
 
 	}
-	
+
+	private static boolean kingEatableWithAction(State state, Action a) {
+
+		int[] kingCoord = state.getKingCoord();
+		int destRow = a.getRowTo();
+		int destColumn = a.getColumnTo();
+
+		boolean northBorder = false;
+		boolean southBorder = false;
+		boolean westBorder = false;
+		boolean eastBorder = false;
+
+		State.Pawn north = null;
+		State.Pawn south = null;
+		State.Pawn west = null;
+		State.Pawn east = null;
+
+
+		if(kingCoord[0] - 1 >= 0)
+			north = state.getPawn(kingCoord[0] - 1, kingCoord[1]);
+		else
+			northBorder = true;
+
+
+		if(kingCoord[0] + 1 < 9)
+			south = state.getPawn(kingCoord[0] + 1, kingCoord[1]);
+		else
+			southBorder = true;
+
+
+		if(kingCoord[1] - 1 >= 0)
+			west = state.getPawn(kingCoord[0], kingCoord[1] - 1);
+		else
+			westBorder = true;
+
+		if(kingCoord[1] + 1 < 9)
+			east = state.getPawn(kingCoord[0], kingCoord[1] + 1);
+		else
+			eastBorder = true;
+
+
+		// Re sul trono
+
+		if(kingCoord[0] == 4 && kingCoord[1] == 4) {
+			if(north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 4 && destColumn == 5))
+				return true;
+			else if(north.equalsPawn("B") && south.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 4 && destColumn == 3))
+				return true;
+			else if(north.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 5 && destColumn == 4))
+				return true;
+			else if(south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 3 && destColumn == 4))
+				return true;
+
+		}
+
+		// Re vicino al trono
+
+		if(kingCoord[0] == 3 && kingCoord[1] == 4) {
+			if(north.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 3 && destColumn == 5))
+				return true;
+			else if(north.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 3 && destColumn == 3))
+				return true;
+			else if(east.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 2 && destColumn == 4))
+				return true;
+		} else if(kingCoord[0] == 4 && kingCoord[1] == 3) {
+			if(north.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 5 && destColumn == 3))
+				return true;
+			else if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& (destRow == 4 && destColumn == 2))
+				return true;
+			else if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 3 && destColumn == 3))
+				return true;
+		} else if(kingCoord[0] == 4 && kingCoord[1] == 5) {
+			if(north.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 5 && destColumn == 5))
+				return true;
+			else if(north.equalsPawn("B") && south.equalsPawn("B")
+					&& (destRow == 4 && destColumn == 6))
+				return true;
+			else if(south.equalsPawn("B") && east.equalsPawn("B")
+					&& (destRow == 3 && destColumn == 5))
+				return true;
+		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
+			if(south.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 5 && destColumn == 5))
+				return true;
+			else if(east.equalsPawn("B") && south.equalsPawn("B")
+					&& (destRow == 5 && destColumn == 3))
+				return true;
+			else if(east.equalsPawn("B") && west.equalsPawn("B")
+					&& (destRow == 6 && destColumn == 4))
+				return true;
+		}
+
+		// Campo aperto
+
+		if(((north.equalsPawn("B") || state.onCitadels(kingCoord[0] - 1, kingCoord[1])) && (kingCoord[0] + 1 == destRow && kingCoord[1] == destColumn ))
+				|| ((south.equalsPawn("B") || state.onCitadels(kingCoord[0] + 1, kingCoord[1])) && (kingCoord[0] - 1 == destRow && kingCoord[1] == destColumn ))
+				|| ((west.equalsPawn("B") || state.onCitadels(kingCoord[0], kingCoord[1] - 1)) && (kingCoord[0] == destRow && kingCoord[1] + 1 == destColumn ))
+				|| ((east.equalsPawn("B") || state.onCitadels(kingCoord[0], kingCoord[1] + 1)) && (kingCoord[0] == destRow && kingCoord[1] - 1== destColumn )))
+			return true;
+
+
+
+
+		return false;
+
+	}
+
 	private static int numKingMarking(State state, Action a) {
 		int[] kingCoord = state.getKingCoord();
 		//indice 0 = row
 		//indice 1 = col
-		
+
 		int result = 0;
-		
+
 		//Valuto se marco il re con la mossa attuale
 		int destRow = a.getRowTo();
 		int destCol = a.getColumnTo();
-			for(int[] eCoord : state.getEscapePoints())
-				if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
-					if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
-						result++;
-					else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
-						result++;
-				}
-				else if (kingCoord[1] == eCoord[1] && eCoord[1] == destCol) {
-					if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
-						result++;
-					else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
-						result++;
-				}
-			
-	    //Considero se il re sta già venendo marcato anche da altre pedine
-	    result += state.numBlackBetweenKingAndEscape();
+		for(int[] eCoord : state.getEscapePoints())
+			if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
+				if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
+					result++;
+				else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
+					result++;
+			}
+			else if (kingCoord[1] == eCoord[1] && eCoord[1] == destCol) {
+				if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
+					result++;
+				else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
+					result++;
+			}
 
-	    if (result>0)
-	    		System.out.println("Marcatori del re: "+result);			
-		
+		//Considero se il re sta già venendo marcato anche da altre pedine
+		result += state.numBlackBetweenKingAndEscape();
+
+		if (result>0)
+			System.out.println("Marcatori del re: "+result);
+
 		return result;
 	}
-	
+
 	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
 		if (start == end)
 			return true;
-		
+
 		for (int i=start+1; i<end; i++) {
 			if(!state.getPawn(vertical, i).equalsPawn("O"))
 				return false;
 		}
 		return true;
 	}
-	
+
 	private static boolean isCleanVertical(State state, int horizontal, int start, int end) {
 		if (start == end)
 			return true;
-		
+
 		for (int i=start+1; i<end; i++) {
 			if(!state.getPawn(i, horizontal).equalsPawn("O"))
 				return false;
 		}
 		return true;
 	}
+
+	private static boolean blockedKing(State state, Action a) {
+		int destRow = a.getRowTo();
+		int destColumn = a.getColumnTo();
+		int startRow = a.getRowFrom();
+		int startColumn = a.getColumnFrom();
+		int[] kingCoord = state.getKingCoord();
+
+		if(state.kingCanEscape("NORTH") && kingCoord[0] > destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn) )
+			return true;
+		else if(state.kingCanEscape("SOUTH") && kingCoord[0] < destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn))
+			return true;
+		else if(state.kingCanEscape("WEST") && kingCoord[1] > destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow))
+			return true;
+		else
+			return state.kingCanEscape("EAST") && kingCoord[1] < destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow);
+
+	}
+
+
 
 	private static boolean checkNorth(State.Pawn north, State state, int rowTo, int columnTo) {
 
@@ -242,146 +396,77 @@ public class Evaluation {
 	}
 
 
-	public static int evaluate(State state, int turn) {
+	public static int evaluate(State state, String me, int turn) {
 
-		// Situazioni positive per Bionda
+
 		int value = 0;
 
 		if (state.isTerminalWhite())
 			return 10000;
 
-		if (state.kingCanEscape( "NORTH") || state.kingCanEscape("SOUTH") || state.kingCanEscape("WEST") || state.kingCanEscape("EAST")) {
-			value += 500;
-		}
+		int escapePaths = 0;
+
+
+		if(state.kingCanEscape("NORTH"))
+			escapePaths++;
+
+		if(state.kingCanEscape("SOUTH"))
+			escapePaths++;
+
+		if(state.kingCanEscape("WEST"))
+			escapePaths++;
+
+		if(state.kingCanEscape("EAST"))
+			escapePaths++;
+
+		if(escapePaths > 0)
+			value += (escapePaths * 250);
 
 		if(state.kingCanEscapeInTwoMoves())
 			value += 70;
 
-		// Non funziona bene
 		if(state.enemyPawnEatable("W")) {
-			value += 50 * (turn < 5 ? 2 : 1);
+			value += 50 * (turn < 7 ? 5 : 3);
 		}
 
 		if(state.enemyPawnCanBeEaten("W")) {
-			value += 30 * (turn < 5 ? 2 : 1);
+			value += 30 * (turn < 7 ? 5 : 2);
 		}
 
+		int[] myAndEnemyPawns = state.numOfMyAndEnemyPawns(me);
 
-		value += (25 * 1.0/state.minKingDistanceFromSafe());
+		// white pawns
+		value += myAndEnemyPawns[0] * 10 * (turn < 7 ? 5 : 2);
+
+		// black pawns
+
+		value -= myAndEnemyPawns[1] * 10 * (turn < 7 ? 5 : 2);
 
 
-		
-		//Situazioni favorevoli per la mora
+
 		if(state.isTerminalBlack())
 			return -10000;
 
 		//if il re sta per essere mangiato
 		if(state.kingCanBeEaten())
-			value -= 2000;
-		
-		// Quante pedine sono a distanza <=2 dal re
-		value -= 1000 * state.blackPawnCloseToKing();
+			value -= 400;
 
-		// Quante pedine bloccano il re per impedirgli la fuga
-		value -= 1000 * state.numBlackBetweenKingAndEscape();
+		value -= 100 * state.numBlackBetweenKingAndEscape();
 
 		if(state.enemyPawnEatable("B"))
-			value -= 70 * (turn < 5 ? 3 : 2);
+			value -= 70 * (turn < 7 ? 4 : 3);
 
 		if(state.enemyPawnCanBeEaten("B")) {
-			value -= 50 * (turn < 5 ? 3 : 2);
+			value -= 50 * (turn < 7 ? 3 : 2);
 		}
 
 		value -= (5 * state.enemiesNearKing());
 
-		
-		
-		
+		//Altri casi
 		return value;
 
 	}
-	
-	
 
-	private boolean enemyPawnEatable(State state, String me) {
-
-		String enemy = me.equals("W") ? "BLACK" : "WHITE";
-
-		List<int[]> enemyPawns = state.getEnemyPawnsCoord(enemy);
-
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
-
-		State.Pawn north = null;
-		State.Pawn south = null;
-		State.Pawn west = null;
-		State.Pawn east = null;
-
-
-		for( int[] pawn : enemyPawns) {
-
-			// Non posso mangiare neri dentro accampamento
-			if(state.onCitadels(pawn[0], pawn[1]) && me.equals("W"))
-				continue;
-
-			try {
-				north = state.getPawn(pawn[0] - 1, pawn[1]);
-			} catch (Exception e) {
-				northBorder = true;
-			}
-
-			try {
-				south = state.getPawn(pawn[0] + 1, pawn[1]);
-			} catch (Exception e) {
-				southBorder = true;
-			}
-
-			try {
-				west = state.getPawn(pawn[0], pawn[1] - 1);
-			} catch (Exception e) {
-				westBorder = true;
-			}
-
-			try {
-				east = state.getPawn(pawn[0], pawn[1] + 1);
-			} catch (Exception e) {
-				eastBorder = true;
-			}
-
-
-			// Campo aperto
-
-			if(!northBorder && !southBorder && (north.equalsPawn(me) && south.equalsPawn(me)))
-				return true;
-
-			if(!westBorder && !eastBorder && (west.equalsPawn(me) && east.equalsPawn(me)))
-				return true;
-
-
-			// Vicinanza trono
-
-			if(!northBorder && !southBorder && (north.equalsPawn("T") && south.equalsPawn(me))
-					|| (!northBorder && !southBorder && south.equalsPawn("T") && north.equalsPawn(me))
-					|| (!westBorder && !eastBorder && west.equalsPawn("T") && east.equalsPawn(me))
-					|| (!westBorder && !eastBorder && east.equalsPawn("T") && west.equalsPawn(me)))
-				return true;
-
-			// Vicinanza cittadella
-
-			if((!southBorder && state.onCitadelsBorder(pawn[0] - 1, pawn[1]) && south.equalsPawn(me))
-					|| (!northBorder && state.onCitadelsBorder(pawn[0] + 1, pawn[1]) && north.equalsPawn(me))
-					|| (!eastBorder && state.onCitadelsBorder(pawn[0], pawn[1] - 1) && east.equalsPawn(me))
-					|| (!westBorder && state.onCitadelsBorder(pawn[0], pawn[1] + 1) && west.equalsPawn(me)))
-				return true;
-
-
-
-		}
-
-		return false;
-	}
 
 	private static boolean checkCaptureBlackKingLeft(State state, Action a){
 		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
