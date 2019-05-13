@@ -310,6 +310,8 @@ public abstract class State {
 			actions.addAll(getAllLegalMovesInDirection(coordPawn, "WEST"));
 			actions.addAll(getAllLegalMovesInDirection(coordPawn, "EAST"));
 		}
+		
+		Collections.sort(actions);
 		return actions;
 	}
 
@@ -417,8 +419,6 @@ public abstract class State {
 
 
 		}
-
-		Collections.sort(actionsEvaluated);
 
 
 		return actionsEvaluated;
