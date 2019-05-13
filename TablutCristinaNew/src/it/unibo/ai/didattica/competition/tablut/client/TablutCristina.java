@@ -115,7 +115,6 @@ public class TablutCristina extends TablutClient {
             state = this.getCurrentState();
             System.out.println(state.toString());
             
-            System.out.println("Marcatori del re: "+ state.numBlackBetweenKingAndEscape());
            
 
             if (this.getPlayer().equals(Turn.WHITE)) {
@@ -215,11 +214,11 @@ public class TablutCristina extends TablutClient {
         //System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
 
-        if(actions.get(0).getValue() == 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
+        if(actions.get(0).getValue() >= 10000 && state.getTurn().equalsTurn(Turn.WHITE.toString())) {
             return actions.get(0);
         }
         
-        if(actions.get(0).getValue() == 10000 && state.getTurn().equalsTurn(Turn.BLACK.toString())) {
+        if(actions.get(0).getValue() >= 10000 && state.getTurn().equalsTurn(Turn.BLACK.toString())) {
             return actions.get(0);
         }
 
