@@ -46,15 +46,15 @@ public class Evaluation {
 		}
 		else { // caso black
 
-			if(blockedKing(state, a))
-				return 500;
+			/*if(blockedKing(state, a))
+				return 500;*/
 
 			if(kingEatableWithAction(state, a))
-				return 1000;
+				return 2000;
 
 			int markers = numKingMarking(state, a);
 			if (markers > 0)
-				return 250 * markers;
+				return 500 * markers;
 
 			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
 				return 200;
@@ -465,6 +465,7 @@ public class Evaluation {
 			value -= 400;
 		}
 
+		// Pedine nere che stanno marcando il re
 		value -= 100 * state.numBlackBetweenKingAndEscape();
 
 		if(state.enemyPawnEatable("B")) {
