@@ -189,9 +189,9 @@ public class TablutCristina extends TablutClient {
         //System.out.println("Valore prima azione: " + actions.descendingMap().firstEntry().getKey());
 
 
-        if(actions.get(0).getValue() == 1000 && state.getTurn().equalsTurn(Turn.WHITE.toString()))
+        if(actions.get(0).getValue() >= 1000 && state.getTurn().equalsTurn(Turn.WHITE.toString()))
             return actions.get(0);
-        else if(actions.get(0).getValue() == 1000 && state.getTurn().equalsTurn(Turn.BLACK.toString()))
+        else if(actions.get(0).getValue() >= 1000 && state.getTurn().equalsTurn(Turn.BLACK.toString()))
             return actions.get(0);
 
 
