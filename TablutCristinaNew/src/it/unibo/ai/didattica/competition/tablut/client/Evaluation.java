@@ -38,102 +38,16 @@ public class Evaluation {
 					return escapePaths * 250;
 
 				return 150;
-
-
 			} else {
-
 				// Controllo se posso mangiare una pedina con la mossa da valutare
-
-				boolean northBorder = false;
-				boolean southBorder = false;
-				boolean westBorder = false;
-				boolean eastBorder = false;
-
-				State.Pawn north = null;
-				State.Pawn south = null;
-				State.Pawn west = null;
-				State.Pawn east = null;
-
-
-
-				if(rowTo - 1 >= 0)
-					north = state.getPawn(a.getRowTo() - 1, a.getColumnTo());
-				else
-					northBorder = true;
-
-
-				if(rowTo + 1 < 9)
-					south = state.getPawn(a.getRowTo() + 1, a.getColumnTo());
-				else
-					southBorder = true;
-
-
-				if(columnTo - 1 >= 0)
-					west = state.getPawn(a.getRowTo(), a.getColumnTo() - 1);
-				else
-					westBorder = true;
-
-
-				if(columnTo + 1 < 9)
-					east = state.getPawn(a.getRowTo(), a.getColumnTo() + 1);
-				else
-					eastBorder = true;
-
-
-
-
-				switch (direction) {
-					case "NORTH":
-						if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
-							return 100;
-						}
-						else if (!westBorder && checkWest(west, state, rowTo, columnTo)) {
-							return 100;
-						}
-						else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
-							return 100;
-						}
-					case "SOUTH":
-						if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
-							return 100;
-						}
-						else if (!westBorder && checkWest(west, state, rowTo, columnTo)){
-							return 100;
-						}
-						else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
-							return 100;
-						}
-					case "WEST":
-						if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
-							return 100;
-						}
-						else if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
-							return 100;
-						}
-						else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
-							return 100;
-						}
-
-					case "EAST":
-						if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
-							return 100;
-						} else if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
-							return 100;
-						} else if (!westBorder && checkWest(west, state, rowTo, columnTo)) {
-							return 100;
-						}
-
-				}
-
-
-
-
+				if(blackPawnEatable(state, a, direction))
+					return 100;
 			}
 		}
 		else { // caso black
 
-			/*if(blockedKing(state, a))
-				return 500;*/
+			if(blockedKing(state, a))
+				return 500;
 
 			if(kingEatableWithAction(state, a))
 				return 1000;
@@ -152,6 +66,82 @@ public class Evaluation {
 		}
 		return 10;
 
+	}
+
+	private static boolean blackPawnEatable(State state, Action a, String direction) {
+
+		boolean northBorder = false;
+		boolean southBorder = false;
+		boolean westBorder = false;
+		boolean eastBorder = false;
+		State.Pawn north = null;
+		State.Pawn south = null;
+		State.Pawn west = null;
+		State.Pawn east = null;
+		int rowTo = a.getRowTo();
+		int columnTo = a.getColumnTo();
+
+		if(rowTo - 1 >= 0)
+			north = state.getPawn(rowTo - 1, columnTo);
+		else
+			northBorder = true;
+
+		if(rowTo + 1 < 9)
+			south = state.getPawn(rowTo + 1, columnTo);
+		else
+			southBorder = true;
+
+		if(columnTo - 1 >= 0)
+			west = state.getPawn(rowTo, columnTo - 1);
+		else
+			westBorder = true;
+
+		if(columnTo + 1 < 9)
+			east = state.getPawn(rowTo, columnTo + 1);
+		else
+			eastBorder = true;
+
+		switch (direction) {
+			case "NORTH":
+				if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
+					return true;
+				}
+				else if (!westBorder && checkWest(west, state, rowTo, columnTo)) {
+					return true;
+				}
+				else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
+					return true;
+				}
+			case "SOUTH":
+				if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
+					return true;
+				}
+				else if (!westBorder && checkWest(west, state, rowTo, columnTo)){
+					return true;
+				}
+				else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
+					return true;
+				}
+			case "WEST":
+				if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
+					return true;
+				}
+				else if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
+					return true;
+				}
+				else if (!eastBorder && checkEast(east, state, rowTo, columnTo)) {
+					return true;
+				}
+			case "EAST":
+				if (!northBorder && checkNorth(north, state, rowTo, columnTo)) {
+					return true;
+				} else if (!southBorder && checkSouth(south, state, rowTo, columnTo)) {
+					return true;
+				} else if (!westBorder && checkWest(west, state, rowTo, columnTo)) {
+					return true;
+				}
+		}
+		return false;
 	}
 
 	private static boolean kingEatableWithAction(State state, Action a) {
@@ -298,8 +288,6 @@ public class Evaluation {
 		//Considero se il re sta già venendo marcato anche da altre pedine
 		result += state.numBlackBetweenKingAndEscape();
 
-		if (result>0)
-			System.out.println("Marcatori del re: "+result);
 
 		return result;
 	}
@@ -396,13 +384,22 @@ public class Evaluation {
 	}
 
 
-	public static int evaluate(State state, String me, int turn) {
+
+
+	public static int evaluate(State state, int turn) {
+
+
 
 
 		int value = 0;
+		String motivation = "---------------------\n";
+
+		motivation = motivation + state.toString();
+		motivation = motivation + "\n";
+
 
 		if (state.isTerminalWhite())
-			return 10000;
+			return 1000;
 
 		int escapePaths = 0;
 
@@ -419,21 +416,36 @@ public class Evaluation {
 		if(state.kingCanEscape("EAST"))
 			escapePaths++;
 
-		if(escapePaths > 0)
-			value += (escapePaths * 250);
+		boolean kingOnEscapePath = false;
+		if(escapePaths > 0) {
+			value += (escapePaths * 300);
+			motivation = motivation + "trovato almeno un escape point; ";
+			kingOnEscapePath = true;
+		}
 
-		if(state.kingCanEscapeInTwoMoves())
-			value += 70;
+		if(state.kingCanEscapeInTwoMoves()) {
+			motivation = motivation + "king puo scappare in due mosse; ";
+			value += 200;
+		}
 
 		if(state.enemyPawnEatable("W")) {
-			value += 50 * (turn < 7 ? 5 : 3);
+			motivation = motivation + "enemy pawn eatable White; ";
+			value += 50 * (turn < 7 && !kingOnEscapePath ? 10 : 3);
+		}
+
+		if(state.pawnsOnEscapePoint() > 0) {
+			motivation = motivation + "trovate " + state.pawnsOnEscapePoint() + " pedine escape points; ";
+			value -= 30 * state.pawnsOnEscapePoint();
 		}
 
 		if(state.enemyPawnCanBeEaten("W")) {
+			motivation = motivation + "enemy pawn can be eaten White; ";
 			value += 30 * (turn < 7 ? 5 : 2);
 		}
 
-		int[] myAndEnemyPawns = state.numOfMyAndEnemyPawns(me);
+		int[] myAndEnemyPawns = state.numOfMyAndEnemyPawns();
+
+		motivation = motivation + " mie pedine " + myAndEnemyPawns[0] + " pedine nemiche " + myAndEnemyPawns[1] + "; ";
 
 		// white pawns
 		value += myAndEnemyPawns[0] * 10 * (turn < 7 ? 5 : 2);
@@ -445,27 +457,36 @@ public class Evaluation {
 
 
 		if(state.isTerminalBlack())
-			return -10000;
+			return -1000;
 
 		//if il re sta per essere mangiato
-		if(state.kingCanBeEaten())
+		if(state.kingCanBeEaten()) {
+			motivation = motivation + "re mangiabile; ";
 			value -= 400;
+		}
 
 		value -= 100 * state.numBlackBetweenKingAndEscape();
 
-		if(state.enemyPawnEatable("B"))
-			value -= 70 * (turn < 7 ? 4 : 3);
+		if(state.enemyPawnEatable("B")) {
+			motivation = motivation + "enemy pawn eatable Black; ";
+			value -= 70 * (turn < 7 ? 6 : 3);
+		}
 
 		if(state.enemyPawnCanBeEaten("B")) {
+			motivation = motivation + "enemy pawn can be eaten Black; ";
 			value -= 50 * (turn < 7 ? 3 : 2);
 		}
 
-		value -= (5 * state.enemiesNearKing());
+		value -= (80 * state.enemiesNearKing());
+
+		motivation = motivation + "\n---------------------\n";
+		//System.err.println(motivation);
 
 		//Altri casi
 		return value;
 
 	}
+
 
 
 	private static boolean checkCaptureBlackKingLeft(State state, Action a){

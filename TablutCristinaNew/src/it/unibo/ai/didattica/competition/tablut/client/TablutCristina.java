@@ -16,7 +16,7 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-    private long timeoutValue = 50000;
+    private long timeoutValue = 55000;
     private int turn = 0;
 
     public TablutCristina(String player, String name, int gameChosen) throws UnknownHostException, IOException {
@@ -199,11 +199,14 @@ public class TablutCristina extends TablutClient {
         int numThread = Runtime.getRuntime().availableProcessors();
 
         ForkJoinPool fjp = new ForkJoinPool(numThread);
+
         MinMaxTask mmt = new MinMaxTask(false, numThread, actions, state, timeMs, timeoutValue, turn, state.getTurn().toString());
 
-        Result res1 = fjp.invoke(mmt);
+        Result resMinMax = fjp.invoke(mmt);
 
-        return res1.getAction();
+        System.out.println("Valore minmax " + resMinMax.getValue());
+
+        return resMinMax.getAction();
     }
 
     private final class Result {
@@ -277,7 +280,7 @@ public class TablutCristina extends TablutClient {
                 int v = -20000;
                 Action result = null;
                 int temp;
-                System.out.println(Thread.currentThread().getName() + " parto con azioni " + this.actions.size());
+                //System.out.println(Thread.currentThread().getName() + " parto con azioni " + this.actions.size());
                 for (Action action : this.actions) {
 
                     this.atomicInteger.incrementAndGet();
@@ -289,11 +292,13 @@ public class TablutCristina extends TablutClient {
                         result = action;
                     }
                     if (System.currentTimeMillis() - this.timeMs > this.timeout) {
-                        System.out.println(Thread.currentThread().getName() + " termino per timeout");
+                        //System.out.println(Thread.currentThread().getName() + " termino per timeout");
+                        System.out.println(Thread.currentThread().getName() + " valore azione timeout " + v);
                         return new Result(v, result);
                     }
                 }
-                System.out.println(Thread.currentThread().getName() + " termino");
+                //System.out.println(Thread.currentThread().getName() + " termino");
+                System.out.println(Thread.currentThread().getName() + " valore azione " + v);
                 return new Result(v, result);
 
             } else {
@@ -330,7 +335,7 @@ public class TablutCristina extends TablutClient {
                             from = to;
                             limit = (int) Math.round(percentage3 * size);
                             to = from + limit;
-                            maxDepth = 3;
+                            maxDepth = 4;
                         } else if (i == 3 * (numThread / 4)) {
                             from = to;
                             limit = (int) Math.round(percentage4 * size);
@@ -360,7 +365,7 @@ public class TablutCristina extends TablutClient {
                     }
                 }
 
-                System.out.println("Nodi esplorati: " + ai.get());
+                System.out.println("Nodi esplorati: " + ai.get() + " in " + ( System.currentTimeMillis() - timeMs));
                 return res;
             }
 
@@ -378,12 +383,14 @@ public class TablutCristina extends TablutClient {
             }
             else if(depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
                 if(this.me.equals("W"))
-                    return Evaluation.evaluate(state, this.me, this.turn);
+                    return Evaluation.evaluate(state, this.turn);
+                else if(this.me.equals("B"))
+                    return -Evaluation.evaluate(state, this.turn);
                 else
-                    return -Evaluation.evaluate(state, this.me, this.turn);
+                    throw new InputMismatchException();
 
 
-            //atomicInteger.incrementAndGet();
+            atomicInteger.incrementAndGet();
 
             List<Action> actions = state.getAllLegalMoves();
 
@@ -410,14 +417,16 @@ public class TablutCristina extends TablutClient {
             }
             else if (depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
                 if(this.me.equals("W"))
-                    return Evaluation.evaluate(state, this.me, this.turn);
+                    return Evaluation.evaluate(state, this.turn);
+                else if(this.me.equals("B"))
+                    return -Evaluation.evaluate(state, this.turn);
                 else
-                    return -Evaluation.evaluate(state, this.me, this.turn);
+                    throw new InputMismatchException();
 
 
             //return 1000, 0 o -1000 a seconda del caso
 
-            //atomicInteger.incrementAndGet();
+            atomicInteger.incrementAndGet();
             //else continua
             List<Action> actions = state.getAllLegalMoves();
 
