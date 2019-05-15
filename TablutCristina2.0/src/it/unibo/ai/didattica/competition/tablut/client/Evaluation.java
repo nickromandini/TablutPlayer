@@ -54,9 +54,8 @@ public class Evaluation {
 			if(kingEatableWithAction(state, a))
 				return 2000;
 
-			int markers = numKingMarking(state, a);
-			if (markers > 0)
-				return 500 * markers;
+			if (isKingMarked(state, a))
+				return 1000;
 
 			if (checkCaptureBlackKingLeft(state, a) || checkCaptureBlackKingRight(state, a) || checkCaptureBlackKingUp(state, a) || checkCaptureBlackKingDown(state, a))
 				return 200;
