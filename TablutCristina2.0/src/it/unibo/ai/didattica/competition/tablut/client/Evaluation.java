@@ -263,12 +263,12 @@ public class Evaluation {
 
 	}
 
-	private static int numKingMarking(State state, Action a) {
+	private static boolean isKingMarked(State state, Action a) {
 		int[] kingCoord = state.getKingCoord();
 		//indice 0 = row
 		//indice 1 = col
 
-		int result = 0;
+	
 
 		//Valuto se marco il re con la mossa attuale
 		int destRow = a.getRowTo();
@@ -276,22 +276,20 @@ public class Evaluation {
 		for(int[] eCoord : state.getEscapePoints())
 			if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
 				if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
-					result++;
+					return true;
 				else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
-					result++;
+					return true;
 			}
 			else if (kingCoord[1] == eCoord[1] && eCoord[1] == destCol) {
 				if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
-					result++;
+					return true;
 				else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
-					result++;
+					return true;
 			}
 
-		//Considero se il re sta già venendo marcato anche da altre pedine
-		result += state.numBlackBetweenKingAndEscape();
 
 
-		return result;
+		return false;
 	}
 
 	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
