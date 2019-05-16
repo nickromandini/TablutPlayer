@@ -46,8 +46,6 @@ public class Evaluation {
 		}
 		else { // caso black
 
-			/*if(blockedKing(state, a))
-				return 500;*/
 
 			if(kingEatableWithAction(state, a))
 				return 2000;
@@ -149,11 +147,6 @@ public class Evaluation {
 		int destRow = a.getRowTo();
 		int destColumn = a.getColumnTo();
 
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
-
 		State.Pawn north = null;
 		State.Pawn south = null;
 		State.Pawn west = null;
@@ -162,25 +155,25 @@ public class Evaluation {
 
 		if(kingCoord[0] - 1 >= 0)
 			north = state.getPawn(kingCoord[0] - 1, kingCoord[1]);
-		else
-			northBorder = true;
+		else {
+		}
 
 
 		if(kingCoord[0] + 1 < 9)
 			south = state.getPawn(kingCoord[0] + 1, kingCoord[1]);
-		else
-			southBorder = true;
+		else {
+		}
 
 
 		if(kingCoord[1] - 1 >= 0)
 			west = state.getPawn(kingCoord[0], kingCoord[1] - 1);
-		else
-			westBorder = true;
+		else {
+		}
 
 		if(kingCoord[1] + 1 < 9)
 			east = state.getPawn(kingCoord[0], kingCoord[1] + 1);
-		else
-			eastBorder = true;
+		else {
+		}
 
 
 		// Re sul trono
@@ -311,23 +304,6 @@ public class Evaluation {
 		return true;
 	}
 
-	private static boolean blockedKing(State state, Action a) {
-		int destRow = a.getRowTo();
-		int destColumn = a.getColumnTo();
-		int startRow = a.getRowFrom();
-		int startColumn = a.getColumnFrom();
-		int[] kingCoord = state.getKingCoord();
-
-		if(state.kingCanEscape("NORTH") && kingCoord[0] > destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn) )
-			return true;
-		else if(state.kingCanEscape("SOUTH") && kingCoord[0] < destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn))
-			return true;
-		else if(state.kingCanEscape("WEST") && kingCoord[1] > destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow))
-			return true;
-		else
-			return state.kingCanEscape("EAST") && kingCoord[1] < destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow);
-
-	}
 
 
 
@@ -488,12 +464,15 @@ public class Evaluation {
 
 
 	private static boolean checkCaptureBlackKingLeft(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//ho il re sulla sinistra
-		if (a.getColumnTo()>1&&state.getPawn(a.getRowTo(), a.getColumnTo()-1).equalsPawn("K"))
+		
+        //ho il re sulla sinistra
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+		if (destCol>1&&state.getPawn(destRow, destCol-1).equalsPawn("K"))
 		{
-			//re sul trono
-			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e5"))
+            //re sul trono
+            //state.getBox(destRow, destCol-1).equals("e5")
+			if(destRow==4 && destCol-1==4)
 			{
 				if(state.getPawn(3, 4).equalsPawn("B")
 						&& state.getPawn(4, 3).equalsPawn("B")
@@ -503,8 +482,9 @@ public class Evaluation {
 
 				}
 			}
-			//re adiacente al trono
-			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e4"))
+            //re adiacente al trono
+            //state.getBox(destRow, destCol-1).equals("e4")
+			if(destRow==3 && destCol-1==4)
 			{
 				if(state.getPawn(2, 4).equalsPawn("B")
 						&& state.getPawn(3, 3).equalsPawn("B"))
@@ -512,8 +492,9 @@ public class Evaluation {
 					return true;
 
 				}
-			}
-			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e6"))
+            }
+            //state.getBox(destRow, destCol-1).equals("e6")
+			if(destRow==5 && destCol-1==4)
 			{
 				if(state.getPawn(5, 3).equalsPawn("B")
 						&& state.getPawn(6, 4).equalsPawn("B"))
@@ -521,8 +502,9 @@ public class Evaluation {
 					return true;
 
 				}
-			}
-			if(state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("f5"))
+            }
+            //state.getBox(destRow, destCol-1).equals("f5")
+			if(destRow==4 && destCol-1==5)
 			{
 				if(state.getPawn(3, 5).equalsPawn("B")
 						&& state.getPawn(5, 5).equalsPawn("B"))
@@ -532,25 +514,27 @@ public class Evaluation {
 				}
 			}
 			//sono fuori dalle zone del trono
-			if(!state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e5")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e6")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("e4")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()-1).equals("f5"))
+			if(!(destRow==4 && destCol-1==4 /*"e5"*/)
+					&& !(destRow==5 && destCol-1==4 /*"e6"*/)
+					&& !(destRow==3 && destCol-1==4/*"e4"*/)
+					&& !(destRow==4 && destCol-1==5/*"f5"*/))
 			{
-				return (state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()-2)));
+				return (state.getPawn(destRow, destCol - 2).equalsPawn("B")
+						|| state.onCitadels(destRow, destCol-2));
 			}
 		}
 		return false;
 	}
 
 	private static boolean checkCaptureBlackKingRight(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//ho il re sulla destra
-		if (a.getColumnTo()<state.getBoard().length-2&&(state.getPawn(a.getRowTo(),a.getColumnTo()+1).equalsPawn("K")))
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        //ho il re sulla destra
+		if (destCol<7&&(state.getPawn(destRow,destCol+1).equalsPawn("K")))
 		{
 			//re sul trono
-			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e5"))
+			if(destRow==4 && destCol-1==4 /*e5*/)
 			{
 				if(state.getPawn(3, 4).equalsPawn("B")
 						&& state.getPawn(4, 5).equalsPawn("B")
@@ -560,7 +544,7 @@ public class Evaluation {
 				}
 			}
 			//re adiacente al trono
-			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e4"))
+			if(destRow==3 && destCol-1==4 /*e4*/)
 			{
 				if(state.getPawn(2, 4).equalsPawn("B")
 						&& state.getPawn(3, 5).equalsPawn("B"))
@@ -568,7 +552,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e6"))
+			if(destRow==5 && destCol-1==4 /*e6*/)
 			{
 				if(state.getPawn(5, 5).equalsPawn("B")
 						&& state.getPawn(6, 4).equalsPawn("B"))
@@ -576,7 +560,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("d5"))
+			if(destRow==4 && destCol-1==3 /*d5*/)
 			{
 				if(state.getPawn(3, 3).equalsPawn("B")
 						&& state.getPawn(3, 5).equalsPawn("B"))
@@ -585,25 +569,27 @@ public class Evaluation {
 				}
 			}
 			//sono fuori dalle zone del trono
-			if(!state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("d5")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e6")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e4")
-					&& !state.getBox(a.getRowTo(), a.getColumnTo()+1).equals("e5"))
+			if(!(destRow==4 && destCol-1==3 /*d5*/)
+					&& !(destRow==5 && destCol-1==4 /*e6*/)
+					&& !(destRow==3 && destCol-1==4 /*e4*/)
+					&& !(destRow==4 && destCol-1==4 /*e5*/))
 			{
-				return (state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo()+2)));
+				return (state.getPawn(destRow, destCol + 2).equalsPawn("B")
+						|| state.onCitadels(destRow, destCol+2));
 			}
 		}
 		return false;
 	}
 
 	private static boolean checkCaptureBlackKingDown(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//ho il re sotto
-		if (a.getRowTo()<state.getBoard().length-2&&state.getPawn(a.getRowTo()+1,a.getColumnTo()).equalsPawn("K"))
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        //ho il re sotto
+		if (destRow<7&&state.getPawn(destRow+1,destCol).equalsPawn("K"))
 		{
 			//re sul trono
-			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e5"))
+			if(destRow==4 && destCol-1==4 /*e5*/)
 			{
 				if(state.getPawn(5, 4).equalsPawn("B")
 						&& state.getPawn(4, 5).equalsPawn("B")
@@ -613,7 +599,7 @@ public class Evaluation {
 				}
 			}
 			//re adiacente al trono
-			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e4"))
+			if(destRow==3 && destCol-1==4 /*e4*/)
 			{
 				if(state.getPawn(3, 3).equalsPawn("B")
 						&& state.getPawn(3, 5).equalsPawn("B"))
@@ -621,7 +607,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("d5"))
+			if(destRow==4 && destCol-1==3 /*d5*/)
 			{
 				if(state.getPawn(4, 2).equalsPawn("B")
 						&& state.getPawn(5, 3).equalsPawn("B"))
@@ -629,7 +615,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("f5"))
+			if(destRow==4 && destCol-1==5 /*f5*/)
 			{
 				if(state.getPawn(4, 6).equalsPawn("B")
 						&& state.getPawn(5, 5).equalsPawn("B"))
@@ -638,25 +624,27 @@ public class Evaluation {
 				}
 			}
 			//sono fuori dalle zone del trono
-			if(!state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("d5")
-					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e4")
-					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("f5")
-					&& !state.getBox(a.getRowTo()+1, a.getColumnTo()).equals("e5"))
+			if(!(destRow==4 && destCol-1==3 /*d5*/)
+					&& !(destRow==3 && destCol-1==4 /*e4*/)
+					&& !(destRow==4 && destCol-1==5 /*f5*/)
+					&& !(destRow==4 && destCol-1==4 /*e5*/))
 			{
-				return (state.getPawn(a.getRowTo()+2, a.getColumnTo()).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo()+2, a.getColumnTo())));
+				return (state.getPawn(destRow+2, destCol).equalsPawn("B")
+						|| state.onCitadels(destRow+2, destCol));
 			}
 		}
 		return false;
 	}
 
 	private static boolean checkCaptureBlackKingUp(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//ho il re sopra
-		if (a.getRowTo()>1&&state.getPawn(a.getRowTo()-1, a.getColumnTo()).equalsPawn("K"))
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        //ho il re sopra
+		if (destRow>1&&state.getPawn(destRow-1, destCol).equalsPawn("K"))
 		{
 			//re sul trono
-			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e5"))
+			if(destRow==4 && destCol-1==4 /*e5*/)
 			{
 				if(state.getPawn(3, 4).equalsPawn("B")
 						&& state.getPawn(4, 5).equalsPawn("B")
@@ -666,7 +654,7 @@ public class Evaluation {
 				}
 			}
 			//re adiacente al trono
-			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e6"))
+			if(destRow==4 && destCol-1==5 /*e6*/)
 			{
 				if(state.getPawn(5, 3).equalsPawn("B")
 						&& state.getPawn(5, 5).equalsPawn("B"))
@@ -674,7 +662,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("d5"))
+			if(destRow==4 && destCol-1==3 /*d5*/)
 			{
 				if(state.getPawn(4, 2).equalsPawn("B")
 						&& state.getPawn(3, 3).equalsPawn("B"))
@@ -682,7 +670,7 @@ public class Evaluation {
 					return true;
 				}
 			}
-			if(state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("f5"))
+			if(destRow==4 && destCol-1==5 /*f5*/)
 			{
 				if(state.getPawn(4, 4).equalsPawn("B")
 						&& state.getPawn(3, 5).equalsPawn("B"))
@@ -691,36 +679,38 @@ public class Evaluation {
 				}
 			}
 			//sono fuori dalle zone del trono
-			if(!state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("d5")
-					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e4")
-					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("f5")
-					&& !state.getBox(a.getRowTo()-1, a.getColumnTo()).equals("e5"))
+			if(!(destRow==4 && destCol-1==3 /*d5*/)
+					&& !(destRow==4 && destCol-1==5 /*e6*/)
+					&& !(destRow==4 && destCol-1==5 /*f5*/)
+					&& !(destRow==4 && destCol-1==4 /*e5*/))
 			{
-				return (state.getPawn(a.getRowTo()-2, a.getColumnTo()).equalsPawn("B")
-						|| citadels.contains(state.getBox(a.getRowTo()-2, a.getColumnTo())));
+				return (state.getPawn(destRow-2, destCol).equalsPawn("B")
+						|| state.onCitadels(destRow-2, destCol));
 			}
 		}
 		return false;
 	}
 
 	private static boolean checkCaptureBlackPawnRight(State state, Action a)	{
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//mangio a destra
-		if (a.getColumnTo() < state.getBoard().length - 2 && state.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("W"))
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        //mangio a destra
+		if (destCol < 7 && state.getPawn(destRow, destCol + 1).equalsPawn("W"))
 		{
-			if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B"))
+			if(state.getPawn(destRow, destCol + 2).equalsPawn("B"))
 			{
 				return true;
 			}
-			if(state.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T"))
+			if(state.getPawn(destRow, destCol + 2).equalsPawn("T"))
 			{
 				return true;
 			}
-			if(citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() + 2)))
+			if (state.onCitadels(destRow, destCol + 2))
 			{
 				return true;
 			}
-			return (state.getBox(a.getRowTo(), a.getColumnTo()+2).equals("e5"));
+			return (destRow==4 && destCol-1==4 /*e5*/);
 
 		}
 
@@ -728,37 +718,44 @@ public class Evaluation {
 	}
 
 	private static boolean checkCaptureBlackPawnLeft(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		//mangio a sinistra
-		return (a.getColumnTo() > 1
-				&& state.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("W")
-				&& (state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
-				|| state.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T")
-				|| citadels.contains(state.getBox(a.getRowTo(), a.getColumnTo() - 2))
-				|| (state.getBox(a.getRowTo(), a.getColumnTo()-2).equals("e5"))));
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        //mangio a sinistra
+		return (destCol > 1
+				&& state.getPawn(destRow, destCol - 1).equalsPawn("W")
+				&& (state.getPawn(destRow, destCol - 2).equalsPawn("B")
+				|| state.getPawn(destRow, destCol - 2).equalsPawn("T")
+				|| state.onCitadels(destRow, destCol - 2)
+				|| (destRow==4 && destCol-1==4 /*e5*/)));
 	}
 
 	private static boolean checkCaptureBlackPawnUp(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		// controllo se mangio sopra
-		return (a.getRowTo() > 1
-				&& state.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("W")
-				&& (state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("B")
-				|| state.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T")
-				|| citadels.contains(state.getBox(a.getRowTo() - 2, a.getColumnTo()))
-				|| (state.getBox(a.getRowTo()-2, a.getColumnTo()).equals("e5"))));
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        // controllo se mangio sopra
+		return (destRow > 1
+				&& state.getPawn(destRow - 1, destCol).equalsPawn("W")
+				&& (state.getPawn(destRow - 2, destCol).equalsPawn("B")
+				|| state.getPawn(destRow - 2, destCol).equalsPawn("T")
+				|| state.onCitadels(destRow - 2, destCol)
+				|| (destRow==4 && destCol-1==4 /*e5*/)));
 	}
 
 	private static boolean checkCaptureBlackPawnDown(State state, Action a){
-		List<String> citadels = Arrays.asList("a4", "a5", "a6", "b5", "d1", "e1", "f1", "e2", "i4", "i5", "i6", "h5", "d9", "e9", "f9", "e8");
-		// controllo se mangio sotto
-		return  (a.getRowTo() < state.getBoard().length - 2
-				&& state.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("W")
-				&& (state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("B")
-				|| state.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T")
-				|| citadels.contains(state.getBox(a.getRowTo() + 2, a.getColumnTo()))
-				|| (state.getBox(a.getRowTo()+2, a.getColumnTo()).equals("e5"))));
+		
+        int destRow = a.getRowTo();
+        int destCol = a.getColumnTo();
+        // controllo se mangio sotto
+		return  (destRow < 7
+				&& state.getPawn(destRow + 1, destCol).equalsPawn("W")
+				&& (state.getPawn(destRow + 2, destCol).equalsPawn("B")
+				|| state.getPawn(destRow + 2, destCol).equalsPawn("T")
+				|| state.onCitadels(destRow + 2, destCol)
+				|| (destRow==4 && destCol-1==4 /*e5*/)));
 	}
+
 
 
 }
