@@ -17,7 +17,7 @@
         </copy>
     </target>
     <target name="cristina_chiaBOT">
-        <java classname="it.unibo.ai.didattica.competition.tablut.client.TablutCristina" fork="true" ><!--error="C:\Users\Nicolò\Desktop\CristinaLogs.txt">-->
+        <java classname="it.unibo.ai.didattica.competition.tablut.client.TablutCristina" fork="true" error="C:\Users\Nicolò\Desktop\CristinaLogs.txt">
             <arg value="${arg0}"/>
             <classpath>
                 <pathelement location="lib/gson-2.2.2.jar"/>

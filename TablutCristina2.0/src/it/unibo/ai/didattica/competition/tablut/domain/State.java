@@ -1,6 +1,6 @@
 package it.unibo.ai.didattica.competition.tablut.domain;
 
-import it.unibo.ai.didattica.competition.tablut.client.Evaluation;
+import it.unibo.ai.didattica.competition.tablut.util.Evaluation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -17,22 +17,22 @@ import java.util.*;
 public abstract class State {
 
 	private int[] kingCoord = new int[]{-1,-1};
-	private List<int[]> citadels = Arrays.asList(new int[]{3,0}, new int[]{4,0}, new int[]{5,0}, new int[]{4,1},
+	private int[][] citadels = {new int[]{3,0}, new int[]{4,0}, new int[]{5,0}, new int[]{4,1},
 			new int[]{8,3}, new int[]{8,4}, new int[]{8,5}, new int[]{7,4},
 			new int[]{3,8}, new int[]{4,8}, new int[]{5,8}, new int[]{4,7},
-			new int[]{0,3}, new int[]{0,4}, new int[]{0,5}, new int[]{1,4});
-	private List<int[]> citadelsBorders = Arrays.asList(new int[]{3,0}, new int[]{5,0}, new int[]{4,1},
+			new int[]{0,3}, new int[]{0,4}, new int[]{0,5}, new int[]{1,4}};
+	private int[][] citadelsBorders = {new int[]{3,0}, new int[]{5,0}, new int[]{4,1},
 			new int[]{8,3}, new int[]{8,5}, new int[]{7,4},
 			new int[]{3,8}, new int[]{5,8}, new int[]{4,7},
-			new int[]{0,3}, new int[]{0,5}, new int[]{1,4});
-	List<int[]> escapePoints = Arrays.asList(new int[]{0,0}, new int[]{1,0}, new int[]{2,0},
+			new int[]{0,3}, new int[]{0,5}, new int[]{1,4}};
+	private int[][] escapePoints = {new int[]{0,0}, new int[]{1,0}, new int[]{2,0},
 			new int[]{6,0}, new int[]{7,0}, new int[]{8,0},
 			new int[]{0,1}, new int[]{0,2},
 			new int[]{0,6}, new int[]{0,7}, new int[]{0,8},
 			new int[]{1,8}, new int[]{2,8},
 			new int[]{6,8}, new int[]{7,8}, new int[]{8,8},
 			new int[]{8,7}, new int[]{8,6},
-			new int[]{8,2}, new int[]{8,1}, new int[]{8,0});
+			new int[]{8,2}, new int[]{8,1}};
 
 	/**
 	 * Turn represent the player that has to move or the end of the game(A win
@@ -44,12 +44,12 @@ public abstract class State {
 		WHITE("W"), BLACK("B"), WHITEWIN("WW"), BLACKWIN("BW"), DRAW("D");
 		private final String turn;
 
-		private Turn(String s) {
+		Turn(String s) {
 			turn = s;
 		}
 
 		public boolean equalsTurn(String otherName) {
-			return (otherName == null) ? false : turn.equals(otherName);
+			return (otherName != null) && turn.equals(otherName);
 		}
 
 		public String toString() {
@@ -68,12 +68,12 @@ public abstract class State {
 		EMPTY("O"), WHITE("W"), BLACK("B"), THRONE("T"), KING("K");
 		private final String pawn;
 
-		private Pawn(String s) {
+		Pawn(String s) {
 			pawn = s;
 		}
 
 		public boolean equalsPawn(String otherPawn) {
-			return (otherPawn == null) ? false : pawn.equals(otherPawn);
+			return (otherPawn != null) && pawn.equals(otherPawn);
 		}
 
 		public String toString() {
@@ -82,7 +82,7 @@ public abstract class State {
 
 	}
 
-	protected Pawn board[][];
+	protected Pawn[][] board;
 	protected Turn turn;
 
 	public State() {
@@ -111,7 +111,6 @@ public abstract class State {
 		StringBuffer result = new StringBuffer();
 
 		// board
-		result.append("");
 		result.append(this.boardString());
 
 		result.append("-");
@@ -127,12 +126,12 @@ public abstract class State {
 		StringBuffer result = new StringBuffer();
 
 		// board
-		result.append("");
 		result.append(this.boardString().replace("\n", ""));
-		result.append(this.turn.toString());
+		//result.append(this.turn.toString());
 
 		return result.toString();
 	}
+
 
 	/**
 	 * this function tells the pawn inside a specific box on the board
@@ -196,9 +195,7 @@ public abstract class State {
 					if (!this.board[i][j].equals(other.board[i][j]))
 						return false;
 		}
-		if (this.turn != other.turn)
-			return false;
-		return true;
+		return this.turn == other.turn;
 	}
 
 	@Override
@@ -223,14 +220,14 @@ public abstract class State {
 		State result = null;
 		try {
 			cons = stateclass.getConstructor(stateclass);
-			result = cons.newInstance(new Object[0]);
+			result = cons.newInstance();
 		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}
 
-		Pawn oldboard[][] = this.getBoard();
-		Pawn newboard[][] = result.getBoard();
+		Pawn[][] oldboard = this.getBoard();
+		Pawn[][] newboard = result.getBoard();
 
 		for (int i = 0; i < this.board.length; i++) {
 			for (int j = 0; j < this.board[i].length; j++) {
@@ -545,7 +542,7 @@ public abstract class State {
 	}
 
 
-	public List<int[]> getEscapePoints() {
+	public int[][] getEscapePoints() {
 		return escapePoints;
 	}
 
@@ -557,9 +554,7 @@ public abstract class State {
 		return kingOnEscapePoint();
 	}
 
-	public boolean isTerminalBlack() {
-		return kingEatable();
-	}
+	public boolean isTerminalBlack() { return kingEaten(); }
 
 
 	public List<Action> getAllLegalMoves() {
@@ -583,6 +578,7 @@ public abstract class State {
 
 		int x = coordPawn[0];
 		int y = coordPawn[1];
+		int value;
 
 		switch (direction){
 			case "EAST":
@@ -590,16 +586,22 @@ public abstract class State {
 					if(this.getPawn(x,i).equalsPawn(Pawn.EMPTY.toString()) && !onCitadels(x,i)) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch(Exception e) {
 							e.printStackTrace();
 						}
 					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(x,y) && this.getPawn(x,i).equalsPawn(Pawn.EMPTY.toString())){
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch(Exception e) {
 							e.printStackTrace();
 						}
@@ -613,16 +615,22 @@ public abstract class State {
 					if(this.getPawn(x,i).equalsPawn(Pawn.EMPTY.toString()) && !onCitadels(x,i)) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
 					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(x,y) && this.getPawn(x,i).equalsPawn(Pawn.EMPTY.toString())) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -636,16 +644,22 @@ public abstract class State {
 					if(this.getPawn(i,y).equalsPawn(Pawn.EMPTY.toString()) && !onCitadels(i,y)) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
 					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(x,y) && this.getPawn(i,y).equalsPawn(Pawn.EMPTY.toString())){
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -659,16 +673,22 @@ public abstract class State {
 					if(this.getPawn(i, y).equalsPawn(Pawn.EMPTY.toString()) && !onCitadels(i,y)) {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
 					} else if(turn.equalsTurn(Turn.BLACK.toString()) && onCitadels(x,y) && this.getPawn(i, y).equalsPawn(Pawn.EMPTY.toString())){
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
-							newAction.setValue(Evaluation.evaluateAction(newAction, this, direction));
-							actionsEvaluated.add(newAction);
+							value = Evaluation.evaluateAction(newAction, this, direction);
+							if(value >= 0) {
+								newAction.setValue(value);
+								actionsEvaluated.add(newAction);
+							}
 						} catch( Exception e) {
 							e.printStackTrace();
 						}
@@ -772,10 +792,10 @@ public abstract class State {
 		return pawns;
 	}
 
+	// result[0] = white pawns
+	// result[1] = black pawns
 	public int[] numOfMyAndEnemyPawns() {
-		int result[] = new int[2];
-		result[0] = 0;
-		result[1] = 0;
+		int[] result = new int[2];
 		for (int i = 0; i < board.length; i++) {
 			for (int j = 0; j < board.length; j++) {
 				if (this.getPawn(i, j).equalsPawn(Pawn.WHITE.toString())
@@ -863,19 +883,6 @@ public abstract class State {
 	}
 
 
-	public boolean kingCanEscape() {
-		if(kingCoord[0] == -1)
-			kingCoord = getKingCoord();
-		return (kingCanEscape(kingCoord[0], kingCoord[1],"NORTH") || kingCanEscape(kingCoord[0], kingCoord[1],"SOUTH")
-					|| kingCanEscape(kingCoord[0], kingCoord[1],"EAST") || kingCanEscape(kingCoord[0], kingCoord[1],"WEST"));
-	}
-
-	public boolean kingCanEscape(int x, int y) {
-		return (kingCanEscape(x,y,"NORTH") || kingCanEscape(x,y,"SOUTH")
-					|| kingCanEscape(x,y,"EAST") || kingCanEscape(x,y,"WEST"));
-	}
-
-
 	public boolean kingCanEscape(String direction) {
 		if(kingCoord[0] == -1)
 			getKingCoord();
@@ -959,7 +966,7 @@ public abstract class State {
 
 	public boolean kingOnEscapePoint() {
 		if(kingCoord[0]==-1)
-			getKingCoord();
+			kingCoord = getKingCoord();
 		return kingOnEscapePoint(kingCoord[0], kingCoord[1]);
 	}
 
@@ -972,86 +979,44 @@ public abstract class State {
 	}
 
 
-	public boolean kingEatable() {
-		if(kingCoord[0] == -1)
-			kingCoord = getKingCoord();
-		return kingEatable(kingCoord[0], kingCoord[1]);
 
-	}
-
-
-	public boolean kingEatable(int x, int y) {
+	public boolean kingEaten() {
 
 		if(kingCoord[0] == -1) {
 			kingCoord = getKingCoord();
 		}
 
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
+		Pawn north = this.getPawn(kingCoord[0] - 1, kingCoord[1]);
+		Pawn south = this.getPawn(kingCoord[0] + 1, kingCoord[1]);
+		Pawn west = this.getPawn(kingCoord[0], kingCoord[1] - 1);
+		Pawn east = this.getPawn(kingCoord[0], kingCoord[1] + 1);
 
-		Pawn north = null;
-		Pawn south = null;
-		Pawn west = null;
-		Pawn east = null;
-
-
-		if(kingCoord[0] - 1 >= 0)
-			north = this.getPawn(kingCoord[0] - 1, kingCoord[1]);
-		else
-			northBorder = true;
-
-
-		if(kingCoord[0] + 1 < 9)
-			south = this.getPawn(kingCoord[0] + 1, kingCoord[1]);
-		else
-			southBorder = true;
-
-
-		if(kingCoord[1] - 1 >= 0)
-			west = this.getPawn(kingCoord[0], kingCoord[1] - 1);
-		else
-			westBorder = true;
-
-		if(kingCoord[1] + 1 < 9)
-			east = this.getPawn(kingCoord[0], kingCoord[1] + 1);
-		else
-			eastBorder = true;
 
 
 		// Re sul trono
 
 		if(kingCoord[0] == 4 && kingCoord[1] == 4) {
-			if(north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B")
-					&& east.equalsPawn("B"))
-				return true;
+			return north.equalsPawn("B") && south.equalsPawn("B") && west.equalsPawn("B")
+					&& east.equalsPawn("B");
 
 		}// Re vicino al trono
 		else if(kingCoord[0] == 3 && kingCoord[1] == 4) {
-			if(north.equalsPawn("B") && west.equalsPawn("B")
-					&& east.equalsPawn("B"))
-				return true;
+			return north.equalsPawn("B") && west.equalsPawn("B")
+					&& east.equalsPawn("B");
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 3) {
-			if(north.equalsPawn("B") && west.equalsPawn("B")
-					&& south.equalsPawn("B"))
-				return true;
+			return north.equalsPawn("B") && west.equalsPawn("B")
+					&& south.equalsPawn("B");
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 5) {
-			if(north.equalsPawn("B") && east.equalsPawn("B")
-					&& south.equalsPawn("B"))
-				return true;
+			return north.equalsPawn("B") && east.equalsPawn("B")
+					&& south.equalsPawn("B");
 		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
-			if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& east.equalsPawn("B"))
-				return true;
+			return south.equalsPawn("B") && west.equalsPawn("B")
+					&& east.equalsPawn("B");
 		} // campo aperto
-		else if(((north.equalsPawn("B") || onCitadels(kingCoord[0] - 1, kingCoord[1])) && south.equalsPawn("B"))
-				|| ((south.equalsPawn("B") || onCitadels(kingCoord[0] + 1, kingCoord[1])) && north.equalsPawn("B"))
-				|| ((west.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] - 1)) && east.equalsPawn("B"))
-				|| ((east.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] + 1)) && west.equalsPawn("B")))
-			return true;
-
-		return false;
+		else return ((north.equalsPawn("B") || onCitadels(kingCoord[0] - 1, kingCoord[1])) && south.equalsPawn("B"))
+					|| ((south.equalsPawn("B") || onCitadels(kingCoord[0] + 1, kingCoord[1])) && north.equalsPawn("B"))
+					|| ((west.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] - 1)) && east.equalsPawn("B"))
+					|| ((east.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] + 1)) && west.equalsPawn("B"));
 
 	}
 
@@ -1119,38 +1084,13 @@ public abstract class State {
 			kingCoord = getKingCoord();
 		}
 
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
-
-		Pawn north = null;
-		Pawn south = null;
-		Pawn west = null;
-		Pawn east = null;
 
 
-		if(kingCoord[0] - 1 >= 0)
-			north = this.getPawn(kingCoord[0] - 1, kingCoord[1]);
-		else
-			northBorder = true;
+		Pawn north = this.getPawn(kingCoord[0] - 1, kingCoord[1]);
+		Pawn south = this.getPawn(kingCoord[0] + 1, kingCoord[1]);
+		Pawn west = this.getPawn(kingCoord[0], kingCoord[1] - 1);
+		Pawn east = this.getPawn(kingCoord[0], kingCoord[1] + 1);
 
-
-		if(kingCoord[0] + 1 < 9)
-			south = this.getPawn(kingCoord[0] + 1, kingCoord[1]);
-		else
-			southBorder = true;
-
-
-		if(kingCoord[1] - 1 >= 0)
-			west = this.getPawn(kingCoord[0], kingCoord[1] - 1);
-		else
-			westBorder = true;
-
-		if(kingCoord[1] + 1 < 9)
-			east = this.getPawn(kingCoord[0], kingCoord[1] + 1);
-		else
-			eastBorder = true;
 
 
 		// Re sul trono
@@ -1165,9 +1105,8 @@ public abstract class State {
 			else if(north.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
 					&& anEnemyCanArriveSouth(kingCoord, "B"))
 				return true;
-			else if(south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanArriveNorth(kingCoord, "B"))
-				return true;
+			else return south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
+						&& anEnemyCanArriveNorth(kingCoord, "B");
 
 		}// Re vicino al trono
 		else if(kingCoord[0] == 3 && kingCoord[1] == 4) {
@@ -1177,9 +1116,8 @@ public abstract class State {
 			else if(north.equalsPawn("B") && east.equalsPawn("B")
 					&& anEnemyCanArriveWest(kingCoord, "B"))
 				return true;
-			else if(east.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanArriveNorth(kingCoord, "B"))
-				return true;
+			else return east.equalsPawn("B") && west.equalsPawn("B")
+						&& anEnemyCanArriveNorth(kingCoord, "B");
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 3) {
 			if(north.equalsPawn("B") && west.equalsPawn("B")
 					&& anEnemyCanArriveSouth(kingCoord, "B"))
@@ -1187,9 +1125,8 @@ public abstract class State {
 			else if(north.equalsPawn("B") && south.equalsPawn("B")
 					&& anEnemyCanArriveWest(kingCoord, "B"))
 				return true;
-			else if(south.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanArriveNorth(kingCoord, "B"))
-				return true;
+			else return south.equalsPawn("B") && west.equalsPawn("B")
+						&& anEnemyCanArriveNorth(kingCoord, "B");
 		} else if(kingCoord[0] == 4 && kingCoord[1] == 5) {
 			if(north.equalsPawn("B") && east.equalsPawn("B")
 					&& anEnemyCanArriveSouth(kingCoord, "B"))
@@ -1197,9 +1134,8 @@ public abstract class State {
 			else if(north.equalsPawn("B") && south.equalsPawn("B")
 					&& anEnemyCanArriveEast(kingCoord, "B"))
 				return true;
-			else if(south.equalsPawn("B") && east.equalsPawn("B")
-					&& anEnemyCanArriveNorth(kingCoord, "B"))
-				return true;
+			else return south.equalsPawn("B") && east.equalsPawn("B")
+						&& anEnemyCanArriveNorth(kingCoord, "B");
 		} else if(kingCoord[0] == 5 && kingCoord[1] == 4) {
 			if(south.equalsPawn("B") && west.equalsPawn("B")
 					&& anEnemyCanArriveEast(kingCoord, "B"))
@@ -1207,20 +1143,15 @@ public abstract class State {
 			else if(south.equalsPawn("B") && east.equalsPawn("B")
 					&& anEnemyCanArriveWest(kingCoord, "B"))
 				return true;
-			else if(east.equalsPawn("B") && west.equalsPawn("B")
-					&& anEnemyCanArriveSouth(kingCoord, "B"))
-				return true;
+			else return east.equalsPawn("B") && west.equalsPawn("B")
+						&& anEnemyCanArriveSouth(kingCoord, "B");
 		} // campo aperto
-		else if(((north.equalsPawn("B") || onCitadels(kingCoord[0] - 1, kingCoord[1])) && anEnemyCanArriveSouth(kingCoord, "B"))
-				|| ((south.equalsPawn("B") || onCitadels(kingCoord[0] + 1, kingCoord[1])) && anEnemyCanArriveNorth(kingCoord, "B"))
-				|| ((west.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] - 1)) && anEnemyCanArriveEast(kingCoord, "B"))
-				|| ((east.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] + 1)) && anEnemyCanArriveWest(kingCoord, "B")))
-			return true;
+		else
+			return ((north.equalsPawn("B") || onCitadels(kingCoord[0] - 1, kingCoord[1])) && anEnemyCanArriveSouth(kingCoord, "B"))
+					|| ((south.equalsPawn("B") || onCitadels(kingCoord[0] + 1, kingCoord[1])) && anEnemyCanArriveNorth(kingCoord, "B"))
+					|| ((west.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] - 1)) && anEnemyCanArriveEast(kingCoord, "B"))
+					|| ((east.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] + 1)) && anEnemyCanArriveWest(kingCoord, "B"));
 
-
-
-
-		return false;
 
 	}
 
@@ -1241,20 +1172,13 @@ public abstract class State {
 	}
 
 
-	/*private boolean anEnemyCanMoveHere(int[] coord) {
-		return (checkNorthEnemyMovement(coord) || checkSouthEnemyMovement(coord)
-				|| checkWestEnemyMovement(coord) || checkEastEnemyMovement(coord));
-	}*/
-
 	private boolean checkNorthEnemyMovement(int x, int y, String enemy) {
 		for(int i = x; i>=0; i--) {
 			Pawn up = this.getPawn(i,y);
 			if(!up.equalsPawn("O"))
 				if(enemy.equals("B") && up.equalsPawn("B"))
 					return true;
-				else if(enemy.equals("W") && (up.equalsPawn("W") || up.equalsPawn("K")))
-					return true;
-				else return false;
+				else return enemy.equals("W") && (up.equalsPawn("W") || up.equalsPawn("K"));
 
 		}
 
@@ -1268,9 +1192,7 @@ public abstract class State {
 			if(!down.equalsPawn("O"))
 				if(enemy.equals("B") && down.equalsPawn("B"))
 					return true;
-				else if(enemy.equals("W") && (down.equalsPawn("W") || down.equalsPawn("K")))
-					return true;
-				else return false;
+				else return enemy.equals("W") && (down.equalsPawn("W") || down.equalsPawn("K"));
 
 		}
 
@@ -1284,9 +1206,7 @@ public abstract class State {
 			if(!left.equalsPawn("O"))
 				if(enemy.equals("B") && left.equalsPawn("B"))
 					return true;
-				else if(enemy.equals("W") && (left.equalsPawn("W") || left.equalsPawn("K")))
-					return true;
-				else return false;
+				else return enemy.equals("W") && (left.equalsPawn("W") || left.equalsPawn("K"));
 
 		}
 
@@ -1299,9 +1219,7 @@ public abstract class State {
 			if(!right.equalsPawn("O"))
 				if(enemy.equals("B") && right.equalsPawn("B"))
 					return true;
-				else if(enemy.equals("W") && (right.equalsPawn("W") || right.equalsPawn("K")))
-					return true;
-				else return false;
+				else return enemy.equals("W") && (right.equalsPawn("W") || right.equalsPawn("K"));
 
 		}
 
@@ -1417,87 +1335,19 @@ public abstract class State {
 		return false;
 	}
 
-	public boolean enemyPawnEatable(String me) {
-
+	public int differenceNumOfPawns(String me) {
 		String enemy = me.equals("W") ? "B" : "W";
-
-		List<int[]> enemyPawns = getPawnsCoord(enemy);
-
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
-
-		Pawn north = null;
-		Pawn south = null;
-		Pawn west = null;
-		Pawn east = null;
-
-
-		for( int[] pawn : enemyPawns) {
-
-			// Non posso mangiare neri dentro accampamento
-			if(onCitadels(pawn[0], pawn[1]) && me.equals("W"))
-				continue;
-
-			if(pawn[0] - 1 >= 0)
-				north = getPawn(pawn[0] - 1, pawn[1]);
-			else
-				northBorder = true;
-
-			if(pawn[0] + 1 < 9)
-				south = getPawn(pawn[0] + 1, pawn[1]);
-			else
-				southBorder = true;
-
-			if(pawn[1] - 1 >= 0)
-				west = getPawn(pawn[0], pawn[1] - 1);
-			else
-				westBorder = true;
-
-			if(pawn[1] + 1 < 9)
-				east = getPawn(pawn[0], pawn[1] + 1);
-			else
-				eastBorder = true;
-
-
-			// Campo aperto
-
-			if(!northBorder && !southBorder && (north.equalsPawn(me) && south.equalsPawn(me)))
-				return true;
-
-			if(!westBorder && !eastBorder && (west.equalsPawn(me) && east.equalsPawn(me)))
-				return true;
-
-
-			// Vicinanza trono
-
-			if((!northBorder && !southBorder && pawn[0] - 1 == 4 && pawn[1] == 4  && south.equalsPawn(me))
-					|| (!northBorder && !southBorder && pawn[0] + 1 == 4 && pawn[1] == 4  && north.equalsPawn(me))
-					|| (!westBorder && !eastBorder && pawn[0] == 4 && pawn[1] - 1 == 4  && east.equalsPawn(me))
-					|| (!westBorder && !eastBorder && pawn[0] == 4 && pawn[1] + 1 == 4  && west.equalsPawn(me)))
-				return true;
-
-			// Vicinanza cittadella
-
-			if((!southBorder && onCitadelsBorder(pawn[0] - 1, pawn[1]) && south.equalsPawn(me))
-					|| (!northBorder && onCitadelsBorder(pawn[0] + 1, pawn[1]) && north.equalsPawn(me))
-					|| (!eastBorder && onCitadelsBorder(pawn[0], pawn[1] - 1) && east.equalsPawn(me))
-					|| (!westBorder && onCitadelsBorder(pawn[0], pawn[1] + 1) && west.equalsPawn(me)))
-				return true;
-
-
-
-		}
-
-		return false;
+		int numOfPawn[] = this.numOfMyAndEnemyPawns();
+		return numOfPawn[0] - numOfPawn[1];
 	}
 
-	private State resultState(Action action) {
-		State returnState = this.clone();
+	public State resultState(State state, Action action) {
+		State returnState = state.clone();
 		returnState.move(action);
 		return returnState;
 	}
+
+
 
 
 }

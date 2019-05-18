@@ -61,8 +61,8 @@ public class StateTablut extends State implements Serializable {
 	public StateTablut clone() {
 		StateTablut result = new StateTablut();
 
-		Pawn oldboard[][] = this.getBoard();
-		Pawn newboard[][] = result.getBoard();
+        Pawn[][] oldboard = this.getBoard();
+        Pawn[][] newboard = result.getBoard();
 
 		for (int i = 0; i < this.board.length; i++) {
 			for (int j = 0; j < this.board[i].length; j++) {
@@ -100,9 +100,7 @@ public class StateTablut extends State implements Serializable {
 					if (!this.board[i][j].equals(other.board[i][j]))
 						return false;
 		}
-		if (this.turn != other.turn)
-			return false;
-		return true;
-	}
+        return this.turn == other.turn;
+    }
 
 }
