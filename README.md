@@ -45,4 +45,4 @@ ant cristina_chiaBOT -Drole <White | Black> [-Dtimeout <maxDurataTurno>]
 
 Specificando `-Drole White` o `-Drole Black` si lancia il client, rispettivamente, per giocare con i bianchi o con i neri.
 
-Mentre e' possibile specificare (in **millisecondi**) la durata massima richiesta per un turno con `-Darg1 <maxDurataTurno>` . Se non si specifica niente, la durata di default sara' di 60000 millisecondi.
+Mentre e' possibile specificare (in **millisecondi**) la durata massima richiesta per un turno con `-Dtimeout <maxDurataTurno>` . Se non si specifica niente, la durata di default sara' di 60000 millisecondi.
