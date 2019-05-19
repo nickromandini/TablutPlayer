@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MinMaxThread extends Thread {
@@ -22,14 +23,15 @@ public class MinMaxThread extends Thread {
     private int turn;
     private boolean maxDepthAlreadyUpdated = false;
     private String me;
-    private HashMap<String, Integer> stateMap;
+    //private HashMap<String, Integer> statesMap;
+    private ConcurrentHashMap<String, Integer> statesMap;
     private int nodes;
     private int tagli;
 
     public MinMaxThread(BlockingQueue<CommunicationUnit> queueCu, BlockingQueue<Result> queueResult) {
         this.queueCu = queueCu;
         this.queueResult = queueResult;
-        this.stateMap = new HashMap<>();
+        //this.stateMap = new HashMap<>();
 
     }
 
@@ -42,7 +44,7 @@ public class MinMaxThread extends Thread {
             while (true) {
                 this.nodes = 0;
                 this.tagli = 0;
-                stateMap.clear();
+                //statesMap.clear();
                 cu = queueCu.take();
                 timeout = false;
 
@@ -53,6 +55,7 @@ public class MinMaxThread extends Thread {
                 this.timeout = cu.getTimeout();
                 this.turn = cu.getTurn();
                 this.me = cu.getMe();
+                this.statesMap = cu.getStatesMap();
 
 
                 System.out.println(Thread.currentThread().getName() + " inizio con " + actions.length + "azioni");
@@ -68,8 +71,8 @@ public class MinMaxThread extends Thread {
 
                     stateTemp = resultState(this.state, action);
                     st = stateTemp.toLinearString();
-                    if(!stateMap.containsKey(st)) {
-                        stateMap.put(st, 0);
+                    if(!statesMap.containsKey(st)) {
+                        statesMap.put(st, 0);
                         //valuto azione e metto dentro struttura dati
 
                         temp = maxValue(stateTemp, -20000, 20000, 0, this.maxDepth);
@@ -108,13 +111,9 @@ public class MinMaxThread extends Thread {
     private int maxValue(it.unibo.ai.didattica.competition.tablut.domain.State state, int alpha, int beta, int depth, int maxDepth) {
         //nodes++;
         if(state.isTerminalWhite()) {
-            System.err.println("Trovato terminal white");
-            System.err.println(state.toString());
             return 10000 * (this.me.equals("W") ? 1 : -1);
         }
         else if(state.isTerminalBlack()) {
-            System.err.println("Trovato terminal black");
-            System.err.println(state.toString());
             return -10000 * (this.me.equals("W") ? 1 : -1);
         }
         /*else if(!maxDepthAlreadyUpdated && depth == maxDepth && System.currentTimeMillis() - this.timeMs < 26000) {
@@ -139,8 +138,8 @@ public class MinMaxThread extends Thread {
         for (Action action : actions) {
             stateTemp = resultState(state, action);
             st = stateTemp.toLinearString();
-            if(!stateMap.containsKey(st) || stateMap.get(st) > depth) {
-                stateMap.put(st, depth);
+            if(!statesMap.containsKey(st) || statesMap.get(st) > depth) {
+                statesMap.put(st, depth);
                 v = Math.max(v, minValue(stateTemp, alpha, beta, depth + 1, maxDepth));
                 if (v >= beta)
                     return v;
@@ -158,13 +157,9 @@ public class MinMaxThread extends Thread {
 
 
         if(state.isTerminalWhite()) {
-            System.err.println("Trovato terminal white");
-            System.err.println(state.toString());
             return 10000 * (this.me.equals("W") ? 1 : -1);
         }
         else if(state.isTerminalBlack()) {
-            System.err.println("Trovato terminal black");
-            System.err.println(state.toString());
             return -10000 * (this.me.equals("W") ? 1 : -1);
         }
         /*else if(!maxDepthAlreadyUpdated && depth == maxDepth && System.currentTimeMillis() - this.timeMs < 26000 ) {
@@ -191,8 +186,8 @@ public class MinMaxThread extends Thread {
         for (Action action : actions) {
             stateTemp = resultState(state, action);
             st = stateTemp.toLinearString();
-            if(!stateMap.containsKey(st) || stateMap.get(st) > depth) {
-                stateMap.put(st, depth);
+            if(!statesMap.containsKey(st) || statesMap.get(st) > depth) {
+                statesMap.put(st, depth);
                 v = Math.min(v, maxValue(stateTemp, alpha, beta, depth + 1, maxDepth));
                 if (v <= alpha)
                     return v;

@@ -3,6 +3,8 @@ package it.unibo.ai.didattica.competition.tablut.util;
 import it.unibo.ai.didattica.competition.tablut.domain.Action;
 import it.unibo.ai.didattica.competition.tablut.domain.State;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class CommunicationUnit {
     private Action[] actions;
     private State state;
@@ -11,7 +13,10 @@ public class CommunicationUnit {
     private long timeout;
     private int turn;
     private String me;
-    public CommunicationUnit(Action[] actions, State state, int maxDepth, long timeMs, long timeout, int turn, String me) {
+    private ConcurrentHashMap statesMap;
+
+
+    public CommunicationUnit(Action[] actions, State state, int maxDepth, long timeMs, long timeout, int turn, String me, ConcurrentHashMap statesMap) {
         this.actions = actions;
         this.state = state;
         this.maxDepth = maxDepth;
@@ -19,6 +24,7 @@ public class CommunicationUnit {
         this.timeout = timeout;
         this.turn = turn;
         this.me = me;
+        this.statesMap = statesMap;
     }
 
     public Action[] getActions() {
@@ -42,4 +48,5 @@ public class CommunicationUnit {
     public String getMe() {
         return me;
     }
+    public ConcurrentHashMap getStatesMap() { return statesMap; }
 }

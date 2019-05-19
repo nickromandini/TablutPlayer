@@ -11,6 +11,9 @@ public class Evaluation {
 
 
 
+	// EVALUATE ACTION
+
+
 	public static int evaluateAction(Action a, State state, String direction) {
 
 		if (state.getTurn().equalsTurn(State.Turn.WHITE.toString())) {
@@ -49,16 +52,12 @@ public class Evaluation {
 				return 150;
 			} else {
 				State temp = resultState(state,a);
-				if(temp.kingCanBeEaten()) {
-					/*System.err.println("---------");
-					System.err.println("non metto azione");
-					System.err.println(temp.toString());
-					System.err.println("---------");*/
+				if(temp.kingCanBeEaten())
 					return -1000;
-				}
+
 				// Controllo se posso mangiare una pedina con la mossa da valutare
 				if(blackPawnEatable(state, a, direction))
-					if(state.differenceNumOfPawns("W") < -10)
+					if(state.differenceNumOfPawnsNormalized() <= -3)
 						return 500;
 					else
 						return 100;
@@ -71,17 +70,32 @@ public class Evaluation {
 			if(kingEatableWithAction(state, a))
 				return 1000;
 
-
-			/*if(blockedKing(state, a))
-				return 500;*/
+			State temp = resultState(state,a);
+			if(temp.kingCanEscapeInTwoMovesTerminal()) {
+				return -1000;
+			}
 
 			if (isKingMarked(state, a))
 				return 500;
 
-			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
-				return 100;
+			int value = 0;
 
-			return 0;
+			if (checkCaptureBlackPawnLeft(state, a) || checkCaptureBlackPawnRight(state, a) || checkCaptureBlackPawnUp(state, a) || checkCaptureBlackPawnDown(state, a))
+				if(state.differenceNumOfPawnsNormalized() >= 7)
+					return 500;
+				else
+					value += 100;
+
+			if (enemiesNearKingCardinal(state, a))
+				value += 50;
+
+			if (enemiesNearKingDiagonal(state, a))
+				value += 30;
+
+			if (blackOnEscape(state, a))
+				value += 20;
+
+			return value;
 
 		}
 
@@ -94,38 +108,14 @@ public class Evaluation {
 		int destRow = a.getRowTo();
 		int destColumn = a.getColumnTo();
 
-		boolean northBorder = false;
-		boolean southBorder = false;
-		boolean westBorder = false;
-		boolean eastBorder = false;
+		State.Pawn north = state.getPawn(kingCoord[0] - 1, kingCoord[1]);
 
-		State.Pawn north = null;
-		State.Pawn south = null;
-		State.Pawn west = null;
-		State.Pawn east = null;
+		State.Pawn south = state.getPawn(kingCoord[0] + 1, kingCoord[1]);
 
+		State.Pawn west = state.getPawn(kingCoord[0], kingCoord[1] - 1);
 
-		if(kingCoord[0] - 1 >= 0)
-			north = state.getPawn(kingCoord[0] - 1, kingCoord[1]);
-		else
-			northBorder = true;
+		State.Pawn east = state.getPawn(kingCoord[0], kingCoord[1] + 1);
 
-
-		if(kingCoord[0] + 1 < 9)
-			south = state.getPawn(kingCoord[0] + 1, kingCoord[1]);
-		else
-			southBorder = true;
-
-
-		if(kingCoord[1] - 1 >= 0)
-			west = state.getPawn(kingCoord[0], kingCoord[1] - 1);
-		else
-			westBorder = true;
-
-		if(kingCoord[1] + 1 < 9)
-			east = state.getPawn(kingCoord[0], kingCoord[1] + 1);
-		else
-			eastBorder = true;
 
 
 		// Re sul trono
@@ -143,12 +133,8 @@ public class Evaluation {
 			else if(south.equalsPawn("B") && west.equalsPawn("B") && east.equalsPawn("B")
 					&& (destRow == 3 && destColumn == 4))
 				return true;
-
-		}
-
-		// Re vicino al trono
-
-		if(kingCoord[0] == 3 && kingCoord[1] == 4) {
+		} // Re vicino al trono
+		else if(kingCoord[0] == 3 && kingCoord[1] == 4) {
 			if(north.equalsPawn("B") && west.equalsPawn("B")
 					&& (destRow == 3 && destColumn == 5))
 				return true;
@@ -188,15 +174,14 @@ public class Evaluation {
 			else if(east.equalsPawn("B") && west.equalsPawn("B")
 					&& (destRow == 6 && destColumn == 4))
 				return true;
-		}
-
-		// Campo aperto
-
-		return ((north.equalsPawn("B") || state.onCitadels(kingCoord[0] - 1, kingCoord[1])) && (kingCoord[0] + 1 == destRow && kingCoord[1] == destColumn))
+		} // Campo aperto
+		else if (((north.equalsPawn("B") || state.onCitadels(kingCoord[0] - 1, kingCoord[1])) && (kingCoord[0] + 1 == destRow && kingCoord[1] == destColumn))
 				|| ((south.equalsPawn("B") || state.onCitadels(kingCoord[0] + 1, kingCoord[1])) && (kingCoord[0] - 1 == destRow && kingCoord[1] == destColumn))
 				|| ((west.equalsPawn("B") || state.onCitadels(kingCoord[0], kingCoord[1] - 1)) && (kingCoord[0] == destRow && kingCoord[1] + 1 == destColumn))
-				|| ((east.equalsPawn("B") || state.onCitadels(kingCoord[0], kingCoord[1] + 1)) && (kingCoord[0] == destRow && kingCoord[1] - 1 == destColumn));
+				|| ((east.equalsPawn("B") || state.onCitadels(kingCoord[0], kingCoord[1] + 1)) && (kingCoord[0] == destRow && kingCoord[1] - 1 == destColumn)))
+			return true;
 
+		return false;
 
 	}
 
@@ -229,7 +214,6 @@ public class Evaluation {
 		return false;
 	}
 
-
 	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
 		if (start == end)
 			return true;
@@ -251,25 +235,6 @@ public class Evaluation {
 		}
 		return true;
 	}
-
-	private static boolean blockedKing(State state, Action a) {
-		int destRow = a.getRowTo();
-		int destColumn = a.getColumnTo();
-		int startRow = a.getRowFrom();
-		int startColumn = a.getColumnFrom();
-		int[] kingCoord = state.getKingCoord();
-
-		if(state.kingCanEscape("NORTH") && kingCoord[0] > destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn) )
-			return true;
-		else if(state.kingCanEscape("SOUTH") && kingCoord[0] < destRow && (kingCoord[1] == destColumn || kingCoord[1] == startColumn))
-			return true;
-		else if(state.kingCanEscape("WEST") && kingCoord[1] > destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow))
-			return true;
-		else
-			return state.kingCanEscape("EAST") && kingCoord[1] < destColumn && (kingCoord[0] == destRow || kingCoord[0] == startRow);
-
-	}
-
 
 	private static boolean blackPawnEatable(State state, Action a, String direction) {
 
@@ -396,7 +361,112 @@ public class Evaluation {
 		return false;
 	}
 
+	private static boolean blackOnEscape(State state, Action action) {
+		int[] kingCoord = state.getKingCoord();
+		int[][] escapePoints = state.getEscapePoints();
+		int x = action.getRowTo();
+		int y = action.getColumnTo();
 
+		/*
+		 * I: (0,6), (0,7), (1,8), (2,8)
+		 * II: (6,8), (7,8), (8,6), (8,7)
+		 * III: (8,2), (8,1), (6,0), (7,0)
+		 * IV: (2,0), (1,0), (0,1), (0,2)
+		 */
+
+		if (kingCoord[0] == 4 && kingCoord[1] == 4) {
+			for(int[] point : escapePoints) {
+				if(point[0] == x && point[1] == y)
+					return true;
+			}
+			return false;
+		}
+		else if (kingCoord[0] <= 4) {
+
+			if (kingCoord[1] >= 4) {
+				/*controllo I quadrante*/
+				if((x==0 && y==6) || (x==0 && y==7) || (x==1 && y==8) || (x==2 && y==8))
+					return true;
+				return false;
+			}
+			else {
+				/*controllo IV quadrante*/
+				if((x==2 && y==0) || (x==1 && y==0) || (x==0 && y==1) || (x==0 && y==2))
+					return true;
+				return false;
+			}
+
+		}
+		else { //kingCoord[0] > 4
+
+			if (kingCoord[1] >= 4) {
+				/*controllo II quadrante*/
+				if((x==6 && y==8) || (x==7 && y==8) || (x==8 && y==6) || (x==8 && y==7))
+					return true;
+				return false;
+			}
+			else {
+				/*controllo III quadrante*/
+				if((x==8 && y==2) || (x==8 && y==1) || (x==6 && y==0) || (x==7 && y==0))
+					return true;
+				return false;
+			}
+
+		}
+
+	}
+
+	private static boolean enemiesNearKingCardinal(State state, Action action) {
+
+		int[] kingCoord = state.getKingCoord();
+
+		//Pedina nera sopra il re
+		if (kingCoord[0]-1 >= 0 && kingCoord[0]-1 == action.getRowTo() && kingCoord[1] == action.getColumnTo())
+			return true;
+
+		//Pedina nera sotto il re
+		if (kingCoord[0]+1 <= 8 && kingCoord[0]+1 == action.getRowTo() && kingCoord[1] == action.getColumnTo())
+			return true;
+
+		//Pedina nera a sinistra del re
+		if (kingCoord[1]-1 >= 0 && kingCoord[0] == action.getRowTo() && kingCoord[1]-1 == action.getColumnTo())
+			return true;
+
+		//Pedina nera a destra del re
+		if (kingCoord[1]+1 <= 8 && kingCoord[0] == action.getRowTo() && kingCoord[1]+1 == action.getColumnTo())
+			return true;
+
+		return false;
+
+	}
+
+	private static boolean enemiesNearKingDiagonal(State state, Action action) {
+
+		int[] kingCoord = state.getKingCoord();
+
+		//In alto a sinistra
+		if (kingCoord[0]-1 >= 0 && kingCoord[1]-1 >= 0 && kingCoord[0]-1 == action.getRowTo() && kingCoord[1]-1 == action.getColumnTo())
+			return true;
+
+		//In alto a destra
+		if (kingCoord[0]-1 >= 0 && kingCoord[1]+1 <= 8 && kingCoord[0]-1 == action.getRowTo() && kingCoord[1]+1 == action.getColumnTo())
+			return true;
+
+		//In basso a sinistra
+		if (kingCoord[0]+1 <= 8 && kingCoord[1]-1 >= 0 && kingCoord[0]+1 == action.getRowTo() && kingCoord[1]-1 == action.getColumnTo())
+			return true;
+
+		//In basso a destra
+		if (kingCoord[0]+1 <= 8 && kingCoord[1]+1 <= 8 && kingCoord[0]+1 == action.getRowTo() && kingCoord[1]+1 == action.getColumnTo())
+			return true;
+
+		return false;
+
+	}
+
+
+
+	// EVALUATE
 
 
 	public static int evaluate(State state, int turn) {
@@ -411,14 +481,7 @@ public class Evaluation {
 		motivation.append(state.toString());
 		motivation.append("\n");
 
-
-		/*if (state.isTerminalWhite()) {
-			System.err.println("Trovato terminal white evaluation");
-			return 10000;
-		}*/
-
 		int escapePaths = 0;
-
 
 		if(state.kingCanEscape("NORTH"))
 			escapePaths++;
@@ -445,38 +508,25 @@ public class Evaluation {
 			value += 250;
 		}
 
-		/*if(state.enemyPawnEatable("W")) {
-			motivation = motivation + "enemy pawn eatable White; ";
-			value += 50 * (turn < 7 && !kingOnEscapePath ? 10 : 3);
-		}*/
-
-		if(state.pawnsOnEscapePoint() > 0) {
-			motivation.append("trovate " + state.pawnsOnEscapePoint() + " pedine escape points; ");
-			value -= 30 * state.pawnsOnEscapePoint();
+		int pawnsOnEP = state.pawnsOnEscapePoint();
+		if(pawnsOnEP > 0) {
+			motivation.append("trovate " + pawnsOnEP + " pedine escape points; ");
+			value -= 30 * pawnsOnEP;
 		}
 
 		if(state.enemyPawnCanBeEaten("W")) {
 			motivation.append("enemy pawn can be eaten White; ");
-			value += 50 * (turn < 7 ? 5 : 2);
+			value += 100;
 		}
 
 		int[] myAndEnemyPawns = state.numOfMyAndEnemyPawns();
 
 		motivation.append(" mie pedine " + myAndEnemyPawns[0] + " pedine nemiche " + myAndEnemyPawns[1] + "; ");
 
-		// white pawns
-		value += myAndEnemyPawns[0] * 8 * (turn < 7 ? 5 : 2);
-
-		// black pawns
-
-		value -= myAndEnemyPawns[1] * 4 * (turn < 7 ? 5 : 2);
-
-
-
-		/*if(state.isTerminalBlack()) {
-			System.err.println("Trovato terminal black evaluation");
-			return -10000;
-		}*/
+		// differenza compresa tra -9 e 13 ( punto medio 0 )
+		// -9 caso favorevole black
+		// 13 caso favorevole white
+		value += 50 * state.differenceNumOfPawnsNormalized();
 
 		//if il re sta per essere mangiato
 		if(state.kingCanBeEaten()) {
@@ -489,18 +539,14 @@ public class Evaluation {
 		// Pedine nere che stanno marcando il re
 		value -= 100 * state.numBlackBetweenKingAndEscape();
 
-		/*if(state.enemyPawnEatable("B")) {
-			motivation = motivation + "enemy pawn eatable Black; ";
-			value -= 70 * (turn < 7 ? 6 : 3);
-		}*/
-
 		if(state.enemyPawnCanBeEaten("B")) {
 			motivation.append("enemy pawn can be eaten Black; ");
-			value -= 50 * (turn < 7 ? 3 : 2);
+			value -= 100;
 		}
 
-		value -= (50 * state.enemiesNearKing());
-		motivation.append(state.enemiesNearKing() + " enemy near king ; ");
+		value -= (100 * state.enemiesNearKingCardinal());
+		motivation.append(state.enemiesNearKingCardinal() + " enemy near king ; ");
+		value -= (50 * state.enemiesNearKingDiagonal());
 
 		motivation.append("\nVALUE: " + value + "\n---------------------\n");
 		//System.err.println(motivation.toString());
@@ -509,8 +555,6 @@ public class Evaluation {
 		return value;
 
 	}
-
-
 
 	private static boolean checkCaptureBlackPawnRight(State state, Action a)	{
 
@@ -576,7 +620,6 @@ public class Evaluation {
 				|| state.onCitadels(destRow + 2, destCol)
 				|| (destRow==4 && destCol-1==4 /*e5*/)));
 	}
-
 
 	private static State resultState(State state, Action action) {
 		State returnState = state.clone();

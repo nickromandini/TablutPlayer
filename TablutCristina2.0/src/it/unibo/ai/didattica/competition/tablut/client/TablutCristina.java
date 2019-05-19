@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class TablutCristina extends TablutClient {
@@ -17,8 +18,9 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-    private long timeoutValue = 55000;
+    private static long timeoutValue = 55000;
     private int turn = 1;
+    private ConcurrentHashMap<String, Integer> statesMap = new ConcurrentHashMap<>();
 
     private BlockingQueue<CommunicationUnit> qCu = new ArrayBlockingQueue<>(4);
     private BlockingQueue<Result> qResult = new ArrayBlockingQueue<>(4);
@@ -55,10 +57,13 @@ public class TablutCristina extends TablutClient {
             role = (args[0]);
         }
         if (args.length == 2) {
+            timeoutValue = Integer.valueOf(args[2]);
+        }
+        if (args.length == 3) {
             System.out.println(args[1]);
             gametype = Integer.parseInt(args[1]);
         }
-        if (args.length == 3) {
+        if (args.length == 4) {
             name = args[2];
         }
         System.out.println("Selected client: " + args[0]);
@@ -129,6 +134,8 @@ public class TablutCristina extends TablutClient {
             System.out.println(state.toString());
             Action a = null;
 
+            statesMap.clear();
+
             if (this.getPlayer().equals(Turn.WHITE)) {
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(Turn.WHITE)) {
@@ -186,8 +193,16 @@ public class TablutCristina extends TablutClient {
 
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
-                    //List<Action> actionList = state.getAllLegalMoves();
-                    a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+                    if(this.turn == 1) {
+                        try {
+                            a = new Action("f1", "f5", Turn.BLACK);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        //List<Action> actionList = state.getAllLegalMoves();
+                        a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+                    }
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
@@ -195,12 +210,9 @@ public class TablutCristina extends TablutClient {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-
-
-                }
-
-                else if (state.getTurn().equals(Turn.WHITE)) {
                     this.turn++;
+
+                } else if (state.getTurn().equals(Turn.WHITE)) {
                     System.out.println("Waiting for your opponent move... ");
                 } else if (state.getTurn().equals(Turn.WHITEWIN)) {
                     System.out.println("YOU LOSE!");
@@ -226,8 +238,8 @@ public class TablutCristina extends TablutClient {
 
         if(size == 0) {
             System.out.println("Premuto pulsante autodistruzione... ");
-            System.exit(0);
-        }
+        } else if(size == 1)
+            return actions.get(0);
 
         System.out.println("Valore prima azione: " + actions.get(0).getValue());
 
@@ -237,8 +249,7 @@ public class TablutCristina extends TablutClient {
         else if(actions.get(0).getValue() >= 500 && state.getTurn().equalsTurn(Turn.BLACK.toString()))
             return actions.get(0);
 
-        int numThread = 4;//Runtime.getRuntime().availableProcessors();
-
+        int numThread = 4;
         int limit = size / numThread; //(int) Math.round(percentage1 * size);
         Action[][] array = new Action[numThread - 1][limit];
         Action[] arrayLast = new Action[limit + size % numThread];
@@ -246,24 +257,22 @@ public class TablutCristina extends TablutClient {
         int k = 0;
         int j = 0;
         int maxDepth;
-        if(size >= 45)
+        if (size >= 45)
             maxDepth = 3;
-        else if( size > 20 && size < 45)
+        else if (size > 20)
             maxDepth = 4;
         else
-            maxDepth = 5;
-        for(int i = 0; i < actions.size(); i++) {
-            if(i  >= numThread * limit) {
+            maxDepth = 4;
+        for (int i = 0; i < size; i++) {
+            if (i >= numThread * limit) {
                 arrayLast[k + limit] = actions.get(i);
                 k++;
-            }
-            else {
-                if((i + 1) % numThread == 0) {
+            } else {
+                if ((i + 1) % numThread == 0) {
                     arrayLast[j] = actions.get(i);
                     j++;
                     k = 0;
-                }
-                else {
+                } else {
                     array[k][j] = actions.get(i);
                     k++;
                 }
@@ -271,13 +280,14 @@ public class TablutCristina extends TablutClient {
         }
         try {
             for (int i = 0; i < numThread; i++)
-                if(i == numThread - 1)
-                    qCu.put(new CommunicationUnit(arrayLast, state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString()));
+                if (i == numThread - 1)
+                    qCu.put(new CommunicationUnit(arrayLast, state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString(), statesMap));
                 else
-                    qCu.put(new CommunicationUnit(array[i], state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString()));
+                    qCu.put(new CommunicationUnit(array[i], state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString(), statesMap));
         } catch (InterruptedException e) {
             System.out.println("ERRORE");
         }
+
         Result temp;
         Result res = null;
         int nodes = 0;
