@@ -193,16 +193,8 @@ public class TablutCristina extends TablutClient {
 
                 // � il mio turno
                 if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
-                    if(this.turn == 1) {
-                        try {
-                            a = new Action("f1", "f5", Turn.BLACK);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        //List<Action> actionList = state.getAllLegalMoves();
-                        a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
-                    }
+                    //List<Action> actionList = state.getAllLegalMoves();
+                    a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
                     System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
