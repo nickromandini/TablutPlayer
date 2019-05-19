@@ -194,28 +194,22 @@ public class Evaluation {
 		int destCol = a.getColumnTo();
 		for(int[] eCoord : state.getEscapePoints())
 			if (kingCoord[0] == eCoord[0] && eCoord[0] == destRow) {
-				if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1],destCol) && isCleanHorizontal(state, kingCoord[0],destCol,kingCoord[1]))
+				if (kingCoord[1] > destCol && destCol >= eCoord[1] && isCleanHorizontal(state, kingCoord[0], eCoord[1], kingCoord[1]))
 					return true;
-				else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1], destCol) && isCleanHorizontal(state, kingCoord[0],destCol,eCoord[1]))
+				else if(kingCoord[1] < destCol && destCol <= eCoord[1] && isCleanHorizontal(state, kingCoord[0], kingCoord[1] + 1, eCoord[1]))
 					return true;
 			}
 			else if (kingCoord[1] == eCoord[1] && eCoord[1] == destCol) {
-				if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1],eCoord[0],destRow) && isCleanVertical(state, kingCoord[1],destRow,kingCoord[0]))
+				if (kingCoord[0] > destRow && destRow >= eCoord[0] && isCleanVertical(state, kingCoord[1], eCoord[0], kingCoord[0]))
 					return true;
-				else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0], destRow) && isCleanVertical(state, kingCoord[1],destRow,eCoord[0]))
+				else if(kingCoord[0] < destRow && destRow <= eCoord[0] && isCleanVertical(state, kingCoord[1], kingCoord[0] + 1, eCoord[0] + 1))
 					return true;
 			}
-
-
-
 		return false;
 	}
 
 	private static boolean isCleanHorizontal(State state, int vertical, int start, int end) {
-		if (start == end)
-			return true;
-
-		for (int i=start+1; i<end; i++) {
+		for (int i=start; i<end; i++) {
 			if(!state.getPawn(vertical, i).equalsPawn("O"))
 				return false;
 		}
@@ -223,10 +217,7 @@ public class Evaluation {
 	}
 
 	private static boolean isCleanVertical(State state, int horizontal, int start, int end) {
-		if (start == end)
-			return true;
-
-		for (int i=start+1; i<end; i++) {
+		for (int i=start; i<end; i++) {
 			if(!state.getPawn(i, horizontal).equalsPawn("O"))
 				return false;
 		}
