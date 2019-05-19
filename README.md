@@ -45,4 +45,4 @@ ant cristina_chiaBOT -Darg0 <White | Black> [-Darg1 <maxDurataTurno>]
 
 Specificando `-Darg0 White` o `-Darg0 Black` si lancia il client, rispettivamente, per giocare con i bianchi o con i neri.
 
-Mentre e' possibile specificare (in secondi) la durata massima di un turno con `-Darg1 <maxDurataTurno>` . Se non si specifica la durata di default sara' di 60 secondi.
+Mentre e' possibile specificare (in ***millisecondi***) la durata massima richiesta per un turno con `-Darg1 <maxDurataTurno>` . Se non si specifica niente, la durata di default sara' di 60000 millisecondi.
