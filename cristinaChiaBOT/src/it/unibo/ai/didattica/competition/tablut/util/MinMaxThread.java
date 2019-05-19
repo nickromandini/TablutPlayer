@@ -17,10 +17,8 @@ public class MinMaxThread extends Thread {
     private int maxDepth;
     private long timeMs;
     private long timeout;
-    private int turn;
     private String me;
     private ConcurrentHashMap<String, Integer> statesMap;
-    private int nodes;
 
     public MinMaxThread(BlockingQueue<CommunicationUnit> queueCu, BlockingQueue<Result> queueResult) {
         this.queueCu = queueCu;
@@ -34,7 +32,6 @@ public class MinMaxThread extends Thread {
         Thread.currentThread().setPriority(MAX_PRIORITY);
         try {
             while (true) {
-                this.nodes = 0;
                 cu = queueCu.take();
                 timeout = false;
 
@@ -43,7 +40,6 @@ public class MinMaxThread extends Thread {
                 this.maxDepth = cu.getMaxDepth();
                 this.timeMs = cu.getTimeMs();
                 this.timeout = cu.getTimeout();
-                this.turn = cu.getTurn();
                 this.me = cu.getMe();
                 this.statesMap = cu.getStatesMap();
 
@@ -53,7 +49,6 @@ public class MinMaxThread extends Thread {
                 int temp;
                 it.unibo.ai.didattica.competition.tablut.domain.State stateTemp;
                 for (Action action : this.actions) {
-                    nodes++;
                     stateTemp = resultState(this.state, action);
                     st = stateTemp.toLinearString();
                     if(!statesMap.containsKey(st)) {
@@ -64,17 +59,14 @@ public class MinMaxThread extends Thread {
                             result = action;
                         }
                         if (System.currentTimeMillis() - this.timeMs > this.timeout) {
-                            //System.out.println(Thread.currentThread().getName() + " termino per timeout");
-                            System.out.println(Thread.currentThread().getName() + " valore azione timeout " + v);
                             timeout = true;
-                            queueResult.put(new Result(v, result, nodes));
+                            queueResult.put(new Result(v, result));
                             break;
                         }
                     }
                 }
                 if(!timeout) {
-                    System.out.println(Thread.currentThread().getName() + " valore azione " + v);
-                    queueResult.put(new Result(v, result, nodes));
+                    queueResult.put(new Result(v, result));
                 }
             }
         } catch (InterruptedException e) {
@@ -94,9 +86,9 @@ public class MinMaxThread extends Thread {
         }
         else if(depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
             if(this.me.equals("W"))
-                return Evaluation.evaluate(state, this.turn);
+                return Evaluation.evaluate(state);
             else if(this.me.equals("B"))
-                return -Evaluation.evaluate(state, this.turn);
+                return -Evaluation.evaluate(state);
             else
                 throw new InputMismatchException();
 
@@ -129,9 +121,9 @@ public class MinMaxThread extends Thread {
 
         else if (depth == maxDepth || System.currentTimeMillis() - this.timeMs > timeout)
             if(this.me.equals("W"))
-                return Evaluation.evaluate(state, this.turn);
+                return Evaluation.evaluate(state);
             else if(this.me.equals("B"))
-                return -Evaluation.evaluate(state, this.turn);
+                return -Evaluation.evaluate(state);
             else
                 throw new InputMismatchException();
 

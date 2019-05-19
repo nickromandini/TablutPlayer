@@ -18,7 +18,7 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-    private static long timeoutValue = 52000;
+    private long timeoutValue;
     private int turn = 1;
     private ConcurrentHashMap<String, Integer> statesMap = new ConcurrentHashMap<>();
 
@@ -26,9 +26,10 @@ public class TablutCristina extends TablutClient {
     private BlockingQueue<Result> qResult = new ArrayBlockingQueue<>(4);
 
 
-    public TablutCristina(String player, String name, int gameChosen) throws IOException {
+    public TablutCristina(String player, String name, int gameChosen, long timeoutValue) throws IOException {
         super(player, name);
         game = gameChosen;
+        this.timeoutValue = timeoutValue;
     }
 
 
@@ -36,27 +37,16 @@ public class TablutCristina extends TablutClient {
         int gametype = 4;
         String role = "";
         String name = "CChiaBOT";
-        // TODO: change the behavior?
+        long timeout = 52000;
         if (args.length < 1) {
             System.out.println("You must specify which player you are (WHITE or BLACK)");
             System.exit(-1);
         } else {
-            System.out.println(args[0]);
             role = (args[0]);
+            if(!args[1].equals("${timeout}"))
+                timeout = Long.valueOf(args[1]) - 5000;
         }
-        if (args.length == 2) {
-            timeoutValue = Integer.valueOf(args[2]);
-        }
-        if (args.length == 3) {
-            System.out.println(args[1]);
-            gametype = Integer.parseInt(args[1]);
-        }
-        if (args.length == 4) {
-            name = args[2];
-        }
-        System.out.println("Selected client: " + args[0]);
-
-        TablutCristina client = new TablutCristina(role, name, gametype);
+        TablutCristina client = new TablutCristina(role, name, gametype, timeout);
         client.run();
     }
 
@@ -69,37 +59,12 @@ public class TablutCristina extends TablutClient {
             e.printStackTrace();
         }
 
-        State state;
-
-        Game rules = null;
-        switch (this.game) {
-            case 1:
-                state = new StateTablut();
-                rules = new GameTablut();
-                break;
-            case 2:
-                state = new StateTablut();
-                rules = new GameModernTablut();
-                break;
-            case 3:
-                state = new StateBrandub();
-                rules = new GameTablut();
-                break;
-            case 4:
-                state = new StateTablut();
-                state.setTurn(Turn.WHITE);
-                rules = new GameAshtonTablut(99, 0, "garbage", "fake", "fake");
-                System.out.println("Ashton Tablut game");
-                break;
-            default:
-                System.out.println("Error in game selection");
-                System.exit(4);
-        }
+        State state = new StateTablut();
+        state.setTurn(Turn.WHITE);
 
         System.out.println("You are player " + this.getPlayer().toString() + "!");
 
-
-        MinMaxThread[] tasks = new MinMaxThread[Runtime.getRuntime().availableProcessors()];
+        MinMaxThread[] tasks = new MinMaxThread[4];
 
         for(int i = 0; i< tasks.length; i++) {
             tasks[i] = new MinMaxThread(qCu, qResult);
@@ -115,18 +80,15 @@ public class TablutCristina extends TablutClient {
                 e1.printStackTrace();
                 System.exit(1);
             }
-            System.out.println(turn);
-            this.timeMs = System.currentTimeMillis();
-            System.out.println("Current state:");
-            state = this.getCurrentState();
-            System.out.println(state.toString());
-            Action a = null;
 
-            statesMap.clear();
+            state = this.getCurrentState();
 
             if (this.getPlayer().equals(Turn.WHITE)) {
-                // � il mio turno
-                if (this.getCurrentState().getTurn().equals(Turn.WHITE)) {
+                if (state.getTurn().equals(Turn.WHITE)) {
+                    System.out.println("I'm thinking... ");
+                    this.timeMs = System.currentTimeMillis();
+                    state = this.getCurrentState();
+                    Action a = null;
                     if(this.turn == 1) {
                         try {
                             a = new Action("d5", "d4", Turn.WHITE);
@@ -134,7 +96,6 @@ public class TablutCristina extends TablutClient {
                             e.printStackTrace();
                         }
                     } else if (this.turn == 2) {
-                        System.out.println("turno due " + state.getPawn(5,3).equalsPawn("O"));
                         if(state.getPawn(5,3).equalsPawn("O"))
                             try {
                                 a = new Action("e6", "d6", Turn.WHITE);
@@ -144,54 +105,44 @@ public class TablutCristina extends TablutClient {
                         else
                             a = this.alphaBetaSearch(state);
                     } else {
-                        //List<Action> actionList = state.getAllLegalMoves();
-                        a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
+                        a = this.alphaBetaSearch(state);
                     }
-                    System.out.println("Mossa scelta: " + a.toString());
                     try {
                         this.write(a);
                     } catch (ClassNotFoundException | IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-
+                    statesMap.clear();
                 }
-                // � il turno dell'avversario
                 else if (state.getTurn().equals(Turn.BLACK)) {
                     this.turn++;
                     System.out.println("Waiting for your opponent move... ");
                 }
-                // ho vinto
                 else if (state.getTurn().equals(Turn.WHITEWIN)) {
                     System.out.println("YOU WIN!");
                     System.exit(0);
                 }
-                // ho perso
                 else if (state.getTurn().equals(Turn.BLACKWIN)) {
                     System.out.println("YOU LOSE!");
                     System.exit(0);
                 }
-                // pareggio
                 else if (state.getTurn().equals(Turn.DRAW)) {
                     System.out.println("DRAW!");
                     System.exit(0);
                 }
 
             } else {
-
-                // � il mio turno
-                if (this.getCurrentState().getTurn().equals(Turn.BLACK)) {
-                    //List<Action> actionList = state.getAllLegalMoves();
-                    a = this.alphaBetaSearch(state);//getBestAction(actionList, state);
-                    System.out.println("Mossa scelta: " + a.toString());
+                if (state.getTurn().equals(Turn.BLACK)) {
+                    System.out.println("I'm thinking... ");
+                    this.timeMs = System.currentTimeMillis();
+                    Action a = this.alphaBetaSearch(state);
                     try {
                         this.write(a);
                     } catch (ClassNotFoundException | IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                     this.turn++;
-
+                    statesMap.clear();
                 } else if (state.getTurn().equals(Turn.WHITE)) {
                     System.out.println("Waiting for your opponent move... ");
                 } else if (state.getTurn().equals(Turn.WHITEWIN)) {
@@ -206,16 +157,15 @@ public class TablutCristina extends TablutClient {
                 }
 
             }
+
         }
 
     }
-
 
     private Action alphaBetaSearch(State state) {
         boolean recalculatedActions = false;
         List<Action> actions = state.getAllLegalMoves(true);
         int size = actions.size();
-        System.out.println(size + " azioni possibili");
 
         if(size == 0) {
             actions = state.getAllLegalMoves(false);
@@ -223,9 +173,6 @@ public class TablutCristina extends TablutClient {
             recalculatedActions = true;
         } else if(size == 1)
             return actions.get(0);
-
-        System.out.println("Valore prima azione: " + actions.get(0).getValue());
-
 
         if(actions.get(0).getValue() >= 500 && state.getTurn().equalsTurn(Turn.WHITE.toString()))
             return actions.get(0);
@@ -243,8 +190,6 @@ public class TablutCristina extends TablutClient {
         if(!recalculatedActions || timeoutValue >= 30000) {
             if (size >= 40)
                 maxDepth = 3;
-            else if (size >= 20)
-                maxDepth = 4;
             else
                 maxDepth = 4;
         } else
@@ -268,31 +213,26 @@ public class TablutCristina extends TablutClient {
         try {
             for (int i = 0; i < numThread; i++)
                 if (i == numThread - 1)
-                    qCu.put(new CommunicationUnit(arrayLast, state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString(), statesMap));
+                    qCu.put(new CommunicationUnit(arrayLast, state, maxDepth, this.timeMs, timeoutValue, state.getTurn().toString(), statesMap));
                 else
-                    qCu.put(new CommunicationUnit(array[i], state, maxDepth, this.timeMs, timeoutValue, this.turn, state.getTurn().toString(), statesMap));
+                    qCu.put(new CommunicationUnit(array[i], state, maxDepth, this.timeMs, timeoutValue, state.getTurn().toString(), statesMap));
         } catch (InterruptedException e) {
-            System.out.println("ERRORE");
+            System.out.println("ERROR");
         }
 
         Result temp;
         Result res = null;
-        int nodes = 0;
         try {
             for (int i = 0; i < numThread; i++) {
                 temp = qResult.take();
-                nodes += temp.getAi();
                 if(res == null)
                     res = temp;
                 else if( res.getValue() < temp.getValue())
                     res = temp;
             }
         } catch(InterruptedException e) {
-            System.err.println("ERRORE");
+            System.err.println("ERROR");
         }
-        System.out.println("Nodi esplorati " + nodes + " in " + (System.currentTimeMillis() - timeMs));
-        System.out.println("Scelta azione con valore " + res.getValue());
-
 
         return res.getAction();
     }

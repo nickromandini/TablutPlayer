@@ -457,17 +457,9 @@ public class Evaluation {
 	// EVALUATE
 
 
-	public static int evaluate(State state, int turn) {
-
-
-
+	public static int evaluate(State state) {
 
 		int value = 0;
-		StringBuffer motivation = new StringBuffer();
-		motivation.append("---------------------\n");
-
-		motivation.append(state.toString());
-		motivation.append("\n");
 
 		int escapePaths = 0;
 
@@ -484,32 +476,22 @@ public class Evaluation {
 			escapePaths++;
 
 		if(escapePaths > 1)
-			return 7000;
-
-		if(escapePaths > 0) {
-			value += (escapePaths * 300);
-			motivation.append("trovato almeno un escape point; ");
-		}
+			value += 7000;
+		else
+			value += 300;
 
 		if(state.kingCanEscapeInTwoMoves()) {
-			motivation.append("king puo scappare in due mosse; ");
 			value += 250;
 		}
 
 		int pawnsOnEP = state.pawnsOnEscapePoint();
 		if(pawnsOnEP > 0) {
-			motivation.append("trovate " + pawnsOnEP + " pedine escape points; ");
 			value -= 30 * pawnsOnEP;
 		}
 
 		if(state.enemyPawnCanBeEaten("W")) {
-			motivation.append("enemy pawn can be eaten White; ");
 			value += 100;
 		}
-
-		int[] myAndEnemyPawns = state.numOfMyAndEnemyPawns();
-
-		motivation.append(" mie pedine " + myAndEnemyPawns[0] + " pedine nemiche " + myAndEnemyPawns[1] + "; ");
 
 		// differenza compresa tra -9 e 13 ( punto medio 0 )
 		// -9 caso favorevole black
@@ -518,28 +500,19 @@ public class Evaluation {
 
 		//if il re sta per essere mangiato
 		if(state.kingCanBeEaten()) {
-			motivation.append("re mangiabile; ");
-			return -7000;
-
-			//value -= 700;
+			value -= 7000;
 		}
 
 		// Pedine nere che stanno marcando il re
 		value -= 100 * state.numBlackBetweenKingAndEscape();
 
 		if(state.enemyPawnCanBeEaten("B")) {
-			motivation.append("enemy pawn can be eaten Black; ");
 			value -= 100;
 		}
 
 		value -= (100 * state.enemiesNearKingCardinal());
-		motivation.append(state.enemiesNearKingCardinal() + " enemy near king ; ");
 		value -= (50 * state.enemiesNearKingDiagonal());
 
-		motivation.append("\nVALUE: " + value + "\n---------------------\n");
-		//System.err.println(motivation.toString());
-
-		//Altri casi
 		return value;
 
 	}

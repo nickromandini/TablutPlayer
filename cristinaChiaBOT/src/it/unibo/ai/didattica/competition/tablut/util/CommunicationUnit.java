@@ -11,18 +11,16 @@ public class CommunicationUnit {
     private int maxDepth;
     private long timeMs;
     private long timeout;
-    private int turn;
     private String me;
     private ConcurrentHashMap statesMap;
 
 
-    public CommunicationUnit(Action[] actions, State state, int maxDepth, long timeMs, long timeout, int turn, String me, ConcurrentHashMap statesMap) {
+    public CommunicationUnit(Action[] actions, State state, int maxDepth, long timeMs, long timeout, String me, ConcurrentHashMap statesMap) {
         this.actions = actions;
         this.state = state;
         this.maxDepth = maxDepth;
         this.timeMs = timeMs;
         this.timeout = timeout;
-        this.turn = turn;
         this.me = me;
         this.statesMap = statesMap;
     }
@@ -41,9 +39,6 @@ public class CommunicationUnit {
     }
     public long getTimeout() {
         return timeout;
-    }
-    public int getTurn() {
-        return turn;
     }
     public String getMe() {
         return me;
