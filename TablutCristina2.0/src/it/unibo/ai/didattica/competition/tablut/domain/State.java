@@ -6,14 +6,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-
-/**
- * Abstract class for a State of a game We have a representation of the board
- * and the turn
- *
- * @author Andrea Piretti
- *
- */
 public abstract class State {
 
 	private int[] kingCoord = new int[]{-1,-1};
@@ -33,13 +25,6 @@ public abstract class State {
 			new int[]{6,8}, new int[]{7,8},
 			new int[]{8,7}, new int[]{8,6},
 			new int[]{8,2}, new int[]{8,1}};
-
-	/**
-	 * Turn represent the player that has to move or the end of the game(A win
-	 * by a player or a draw)
-	 *
-	 * @author A.Piretti
-	 */
 	public enum Turn {
 		WHITE("W"), BLACK("B"), WHITEWIN("WW"), BLACKWIN("BW"), DRAW("D");
 		private final String turn;
@@ -56,14 +41,6 @@ public abstract class State {
 			return turn;
 		}
 	}
-
-	/**
-	 *
-	 * Pawn represents the content of a box in the board
-	 *
-	 * @author A.Piretti
-	 *
-	 */
 	public enum Pawn {
 		EMPTY("O"), WHITE("W"), BLACK("B"), THRONE("T"), KING("K");
 		private final String pawn;
@@ -247,31 +224,14 @@ public abstract class State {
 	 * Sposta la pedina bianca/nera a seconda che il turno sia di White o di Black
 	 * e cambia il turno corrente
 	 */
-	/*public void move(Action action) {
-		this.board[action.getRowFrom()][action.getColumnFrom()] = Pawn.EMPTY;
-		if (this.turn.equalsTurn("W)) {
-			this.board[action.getRowTo()][action.getColumnTo()] = Pawn.WHITE;
-			this.setTurn(turn.BLACK);
-		}
-		else {
-			this.board[action.getRowTo()][action.getColumnTo()] = Pawn.BLACK;
-			this.setTurn(turn.WHITE);
-		}
-	}*/
 	public void move(Action a) {
 		Pawn pawn = getPawn(a.getRowFrom(), a.getColumnFrom());
-
-		// libero il trono o una casella qualunque
 		if (a.getColumnFrom() == 4 && a.getRowFrom() == 4) {
 			board[a.getRowFrom()][a.getColumnFrom()] = Pawn.THRONE;
 		} else {
 			board[a.getRowFrom()][a.getColumnFrom()] = Pawn.EMPTY;
 		}
-
-		// metto nel nuovo tabellone la pedina mossa
 		board[a.getRowTo()][a.getColumnTo()] = pawn;
-		// aggiorno il tabellone
-		// cambio il turno
 
 		if(getTurn().equalsTurn(Turn.WHITE.toString()))
 			checkCaptureWhite(a);
@@ -287,220 +247,78 @@ public abstract class State {
 	}
 
 	private void checkCaptureWhite(Action a) {
-		// controllo se mangio a destra
 		if (a.getColumnTo() < this.getBoard().length - 2
 				&& this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("B")
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("W")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("K"))) {
 			this.removePawn(a.getRowTo(), a.getColumnTo() + 1);
-			// this.loggGame.fine("Pedina nera rimossa in:
-			// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
 		}
-		// controllo se mangio a sinistra
 		if (a.getColumnTo() > 1 && this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("B")
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("W")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("K"))) {
 			this.removePawn(a.getRowTo(), a.getColumnTo() - 1);
-			// this.loggGame.fine("Pedina nera rimossa in:
-			// "+state.getBox(a.getRowTo(), a.getColumnTo()-1));
 		}
-		// controllo se mangio sopra
 		if (a.getRowTo() > 1 && this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("B")
 				&& (this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("W")
 				|| this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T")
 				|| this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("K"))) {
 			this.removePawn(a.getRowTo() - 1, a.getColumnTo());
-			// this.loggGame.fine("Pedina nera rimossa in:
-			// "+state.getBox(a.getRowTo()-1, a.getColumnTo()));
 		}
-		// controllo se mangio sotto
 		if (a.getRowTo() < this.getBoard().length - 2
 				&& this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("B")
 				&& (this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("W")
 				|| this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T")
 				|| this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("K"))) {
 			this.removePawn(a.getRowTo() + 1, a.getColumnTo());
-			// this.loggGame.fine("Pedina nera rimossa in:
-			// "+state.getBox(a.getRowTo()+1, a.getColumnTo()));
 		}
-		// controllo se ho vinto
-		/*if ((a.getRowTo() == 0 && a.getColumnTo() == 0) || (a.getRowTo() == 8 && a.getColumnTo() == 0)
-				|| (a.getColumnTo() == 8 && a.getRowTo() == 0) || (a.getColumnTo() == 8 && a.getRowTo() == 8)) {
-			if (this.getPawn(a.getRowTo(), a.getColumnTo()).equalsPawn("K")) {
-				this.setTurn(Turn.WHITEWIN);
-			}
-		}*/
-
-		// controllo il pareggio
-		/*if (this.movesWithutCapturing >= this.movesDraw
-				&& (this.getTurn().equalsTurn("B") || this.getTurn().equalsTurn("W"))) {
-			this.setTurn(Turn.DRAW);
-			// this.loggGame.fine("Stabilito un pareggio per troppe mosse senza
-			// mangiare");
-		}*/
 	}
 
-	// TODO da controllare dove indexOutOfBound se controllo di mangiare il re
+
 	private void checkCaptureBlack(Action a) {
-		// controllo se mangio a destra
 		if (a.getColumnTo() < this.getBoard().length - 2
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("W")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K"))
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T"))) {
-			// nero-re-trono N.B. No indexOutOfBoundException perch� se il re si
-			// trovasse sul bordo il giocatore bianco avrebbe gi� vinto
-			/*if (this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K")
-					&& this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("T")) {
-				// ho circondato il re?
-				if (this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("B")
-						&& this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("B")) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
-				}
-			}*/
-			// nero-re-nero
-			/*if (this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("K")
-					&& this.getPawn(a.getRowTo(), a.getColumnTo() + 2).equalsPawn("B")) {
-				// mangio il re?
-				if ((this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("T")
-						|| (this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("B")))
-						&& (this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("T")
-						|| this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("B"))) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
-				}
-			}*/
-			// nero-bianco-trono/nero
 			if (this.getPawn(a.getRowTo(), a.getColumnTo() + 1).equalsPawn("W")) {
 				this.removePawn(a.getRowTo(), a.getColumnTo() + 1);
-				// this.loggGame.fine("Pedina bianca rimossa in:
-				// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
 			}
 		}
-		// controllo se mangio a sinistra
 		if (a.getColumnTo() > 1
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("W")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("K"))
 				&& (this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")
 				|| this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T"))) {
-			// trono-re-nero
-			/*if (this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("K")
-					&& this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("T")) {
-				// ho circondato il re?
-				if (this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("B")
-						&& this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("B")) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
-				}
-			}*/
-			// nero-re-nero
-			if (this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("K")
-					&& this.getPawn(a.getRowTo(), a.getColumnTo() - 2).equalsPawn("B")) {
-				// mangio il re?
-				if ((this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("T")
-						|| (this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("B")))
-						&& (this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("T")
-						|| this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("B"))) {
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()+1));
-				}
-			}
-			// trono/nero-bianco-nero
 			if (this.getPawn(a.getRowTo(), a.getColumnTo() - 1).equalsPawn("W")) {
 				this.removePawn(a.getRowTo(), a.getColumnTo() - 1);
-				// this.loggGame.fine("Pedina bianca rimossa in:
-				// "+state.getBox(a.getRowTo(), a.getColumnTo()-1));
 			}
 		}
-		// controllo se mangio sopra
 		if (a.getRowTo() > 1
 				&& (this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("W")
 				|| this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("K"))
 				&& (this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("B")
 				|| this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T"))) {
-			// nero-re-trono
-			/*if (this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("K")
-					&& this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("T")) {
-				// ho circondato re?
-				if (this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("B")
-						&& this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("B")) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo()-1, a.getColumnTo()));
-				}
-			}*/
-			// nero-re-nero
-			/*if (this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("K")
-					&& this.getPawn(a.getRowTo() - 2, a.getColumnTo()).equalsPawn("B")) {
-				// mangio il re?
-				if ((this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("T")
-						|| this.getPawn(a.getRowTo() - 1, a.getColumnTo() - 1).equalsPawn("B"))
-						&& (this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("T")
-						|| (this.getPawn(a.getRowTo() - 1, a.getColumnTo() + 1).equalsPawn("B")))) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()-1));
-				}
-			}*/
-			// nero-bianco-trono/nero
 			if (this.getPawn(a.getRowTo() - 1, a.getColumnTo()).equalsPawn("W")) {
 				this.removePawn(a.getRowTo() - 1, a.getColumnTo());
-				// this.loggGame.fine("Pedina bianca rimossa in:
-				// "+state.getBox(a.getRowTo()-1, a.getColumnTo()));
 			}
 		}
-		// controllo se mangio sotto
 		if (a.getRowTo() < this.getBoard().length - 2
 				&& (this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("W")
 				|| this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("K"))
 				&& (this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("B")
 				|| this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T"))) {
-			// nero-re-trono
-			/*if (this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("K")
-					&& this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("T")) {
-				// ho circondato re?
-				if (this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("B")
-						&& this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("B")) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo()-1, a.getColumnTo()));
-				}
-			}*/
-			// nero-re-nero
-			/*if (this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("K")
-					&& this.getPawn(a.getRowTo() + 2, a.getColumnTo()).equalsPawn("B")) {
-				// mangio il re?
-				if ((this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("T")
-						|| this.getPawn(a.getRowTo() + 1, a.getColumnTo() - 1).equalsPawn("B"))
-						&& (this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("T")
-						|| (this.getPawn(a.getRowTo() + 1, a.getColumnTo() + 1).equalsPawn("B")))) {
-					this.setTurn(Turn.BLACKWIN);
-					// this.loggGame.fine("Nero vince con re catturato in:
-					// "+state.getBox(a.getRowTo(), a.getColumnTo()-1));
-				}
-			}*/
-			// nero-bianco-trono/nero
 			if (this.getPawn(a.getRowTo() + 1, a.getColumnTo()).equalsPawn("W")) {
 				this.removePawn(a.getRowTo() + 1, a.getColumnTo());
-				// this.loggGame.fine("Pedina bianca rimossa in:
-				// "+state.getBox(a.getRowTo()+1, a.getColumnTo()));
 			}
 		}
-		// controllo regola 11
 		if (this.getBoard().length == 9) {
 			if (a.getColumnTo() == 4 && a.getRowTo() == 2) {
 				if (this.getPawn(3, 4).equalsPawn("W") && this.getPawn(4, 4).equalsPawn("K")
 						&& this.getPawn(4, 3).equalsPawn("B") && this.getPawn(4, 5).equalsPawn("B")
 						&& this.getPawn(5, 4).equalsPawn("B")) {
 					this.removePawn(3, 4);
-					// this.loggGame.fine("Pedina bianca rimossa in:
-					// "+state.getBox(3, 4));
 				}
 			}
 			if (a.getColumnTo() == 4 && a.getRowTo() == 6) {
@@ -508,8 +326,6 @@ public abstract class State {
 						&& this.getPawn(4, 3).equalsPawn("B") && this.getPawn(4, 5).equalsPawn("B")
 						&& this.getPawn(3, 4).equalsPawn("B")) {
 					this.removePawn(5, 4);
-					// this.loggGame.fine("Pedina bianca rimossa in:
-					// "+state.getBox(5, 4));
 				}
 			}
 			if (a.getColumnTo() == 2 && a.getRowTo() == 4) {
@@ -517,8 +333,6 @@ public abstract class State {
 						&& this.getPawn(3, 4).equalsPawn("B") && this.getPawn(5, 4).equalsPawn("B")
 						&& this.getPawn(4, 5).equalsPawn("B")) {
 					this.removePawn(4, 3);
-					// this.loggGame.fine("Pedina bianca rimossa in:
-					// "+state.getBox(4, 3));
 				}
 			}
 			if (a.getColumnTo() == 6 && a.getRowTo() == 4) {
@@ -526,19 +340,9 @@ public abstract class State {
 						&& this.getPawn(4, 3).equalsPawn("B") && this.getPawn(5, 4).equalsPawn("B")
 						&& this.getPawn(3, 4).equalsPawn("B")) {
 					this.removePawn(4, 5);
-					// this.loggGame.fine("Pedina bianca rimossa in:
-					// "+state.getBox(4, 5));
 				}
 			}
 		}
-
-		// controllo il pareggio
-		/*if (this.movesWithutCapturing >= this.movesDraw
-				&& (state.getTurn().equalsTurn("B") || state.getTurn().equalsTurn("W"))) {
-			state.setTurn(State.Turn.DRAW);
-			// this.loggGame.fine("Stabilito un pareggio per troppe mosse senza
-			// mangiare");
-		}*/
 	}
 
 
@@ -557,22 +361,22 @@ public abstract class State {
 	public boolean isTerminalBlack() { return kingEaten(); }
 
 
-	public List<Action> getAllLegalMoves() {
+	public List<Action> getAllLegalMoves(boolean strict) {
 		List<Action> actions = new ArrayList<>();
 
 
 		for(int[] coordPawn : this.getPawnsCoord(getTurn().toString())) {
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "NORTH"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "SOUTH"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "WEST"));
-			actions.addAll(getAllLegalMovesInDirection(coordPawn, "EAST"));
+			actions.addAll(getAllLegalMovesInDirection(coordPawn, "NORTH", strict));
+			actions.addAll(getAllLegalMovesInDirection(coordPawn, "SOUTH", strict));
+			actions.addAll(getAllLegalMovesInDirection(coordPawn, "WEST", strict));
+			actions.addAll(getAllLegalMovesInDirection(coordPawn, "EAST", strict));
 		}
 		Collections.sort(actions);
 		return actions;
 	}
 
 
-	private List<Action> getAllLegalMovesInDirection(int[] coordPawn, String direction) {
+	private List<Action> getAllLegalMovesInDirection(int[] coordPawn, String direction, boolean strict) {
 
 		List<Action> actionsEvaluated = new ArrayList<>();
 
@@ -587,7 +391,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -598,7 +407,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -616,7 +430,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -627,7 +446,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(x, i), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -645,7 +469,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -656,7 +485,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -674,7 +508,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -685,7 +524,12 @@ public abstract class State {
 						try {
 							Action newAction = new Action(this.getBox(x, y), this.getBox(i, y), this.turn);
 							value = Evaluation.evaluateAction(newAction, this, direction);
-							if(value >= 0) {
+							if(strict) {
+								if (value >= 0) {
+									newAction.setValue(value);
+									actionsEvaluated.add(newAction);
+								}
+							} else {
 								newAction.setValue(value);
 								actionsEvaluated.add(newAction);
 							}
@@ -723,36 +567,6 @@ public abstract class State {
 		return kingCoord;
 	}
 
-	/*public List<int[]> getEnemyPawnsCoord(String enemy) {
-		List<int[]> pawns = new ArrayList<>();
-		int[] buf;
-		if (enemy.equals("B)) {
-			for (int i = 0; i < board.length; i++) {
-				for (int j = 0; j < board.length; j++) {
-					if (this.getPawn(i, j).equalsPawn(Pawn.BLACK.toString())) {
-						buf = new int[2];
-						buf[0] = i;
-						buf[1] = j;
-						pawns.add(buf);
-					}
-				}
-			}
-		} else if(enemy.equals("W)){
-			for (int i = 0; i < board.length; i++) {
-				for (int j = 0; j < board.length; j++) {
-					if (this.getPawn(i, j).equalsPawn(Pawn.WHITE.toString())
-							|| this.getPawn(i, j).equalsPawn(Pawn.KING.toString())) {
-						buf = new int[2];
-						buf[0] = i;
-						buf[1] = j;
-						pawns.add(buf);
-					}
-				}
-			}
-		}
-
-		return pawns;
-	}*/
 
 	public List<int[]> getPawnsCoord(String me) {
 		List<int[]> pawns = new ArrayList<>();
@@ -1070,21 +884,6 @@ public abstract class State {
 					|| ((west.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] - 1)) && east.equalsPawn("B"))
 					|| ((east.equalsPawn("B") || onCitadels(kingCoord[0], kingCoord[1] + 1)) && west.equalsPawn("B"));
 
-	}
-
-
-	public int blackPawnCloseToKing() {
-		if(kingCoord[0] == -1) {
-			kingCoord = getKingCoord();
-		}
-		int result = 0;
-		int distanza = 9;
-		for (int[] pCoord : getPawnsCoord("B")) {
-			distanza = (int) Math.sqrt(Math.pow(Math.abs(this.kingCoord[0] - pCoord[0]), 2) + Math.pow(Math.abs(this.kingCoord[1] - pCoord[1]), 2));
-			if(distanza <= 2)
-				result++;
-		}
-		return result;
 	}
 
 	public int numBlackBetweenKingAndEscape() {
@@ -1427,14 +1226,5 @@ public abstract class State {
 		int numOfPawn[] = this.numOfMyAndEnemyPawns();
 		return numOfPawn[0] - numOfPawn[1] + 7;
 	}
-
-	public State resultState(State state, Action action) {
-		State returnState = state.clone();
-		returnState.move(action);
-		return returnState;
-	}
-
-
-
 
 }

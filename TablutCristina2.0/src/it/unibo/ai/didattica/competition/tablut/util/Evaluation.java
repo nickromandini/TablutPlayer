@@ -2,9 +2,6 @@ package it.unibo.ai.didattica.competition.tablut.util;
 
 import it.unibo.ai.didattica.competition.tablut.domain.Action;
 import it.unibo.ai.didattica.competition.tablut.domain.State;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Evaluation {

@@ -18,7 +18,7 @@ public class TablutCristina extends TablutClient {
     private int game;
 
     private long timeMs;
-    private static long timeoutValue = 55000;
+    private static long timeoutValue = 52000;
     private int turn = 1;
     private ConcurrentHashMap<String, Integer> statesMap = new ConcurrentHashMap<>();
 
@@ -31,18 +31,6 @@ public class TablutCristina extends TablutClient {
         game = gameChosen;
     }
 
-
-    public TablutCristina(String player) throws IOException {
-        this(player, "random", 4);
-    }
-
-    public TablutCristina(String player, String name) throws IOException {
-        this(player, name, 4);
-    }
-
-    public TablutCristina(String player, int gameChosen) throws IOException {
-        this(player, "random", gameChosen);
-    }
 
     public static void main(String[] args) throws IOException {
         int gametype = 4;
@@ -224,12 +212,15 @@ public class TablutCristina extends TablutClient {
 
 
     private Action alphaBetaSearch(State state) {
-        List<Action> actions = state.getAllLegalMoves();
+        boolean recalculatedActions = false;
+        List<Action> actions = state.getAllLegalMoves(true);
         int size = actions.size();
         System.out.println(size + " azioni possibili");
 
         if(size == 0) {
-            System.out.println("Premuto pulsante autodistruzione... ");
+            actions = state.getAllLegalMoves(false);
+            size = actions.size();
+            recalculatedActions = true;
         } else if(size == 1)
             return actions.get(0);
 
@@ -242,19 +233,23 @@ public class TablutCristina extends TablutClient {
             return actions.get(0);
 
         int numThread = 4;
-        int limit = size / numThread; //(int) Math.round(percentage1 * size);
+        int limit = size / numThread;
         Action[][] array = new Action[numThread - 1][limit];
         Action[] arrayLast = new Action[limit + size % numThread];
 
         int k = 0;
         int j = 0;
         int maxDepth;
-        if (size >= 45)
-            maxDepth = 3;
-        else if (size > 20)
-            maxDepth = 4;
-        else
-            maxDepth = 4;
+        if(!recalculatedActions || timeoutValue >= 30000) {
+            if (size >= 40)
+                maxDepth = 3;
+            else if (size >= 20)
+                maxDepth = 4;
+            else
+                maxDepth = 4;
+        } else
+            maxDepth = 2;
+
         for (int i = 0; i < size; i++) {
             if (i >= numThread * limit) {
                 arrayLast[k + limit] = actions.get(i);
