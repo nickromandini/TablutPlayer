@@ -1,7 +1,7 @@
 # TablutCompetition: cristina_chiaBOT
 Software per la [Tablut Students Competition](https://github.com/AGalassi/TablutCompetition).
 
-Il progetto è stato realizzato da Nicolò Romandini e Ugo Leone Cavalcanti.
+Il progetto e' stato realizzato da Nicolo' Romandini e Ugo Leone Cavalcanti.
 
 ## Installazione su Ubuntu/Debian 
 
@@ -37,7 +37,7 @@ ant clean
 ant compile
 ```
 
-Il progetto e' stato compilato nella cartella `build`. Per lanciare il server si puo' utilizzare il comando:
+A questo punto il progetto e' stato compilato nella cartella `build`. Per lanciare il server si puo' utilizzare il comando:
 
 ```bash
 ant cristina_chiaBOT -Darg0 <White | Black> [-Darg1 <maxDurataTurno>]
@@ -45,4 +45,4 @@ ant cristina_chiaBOT -Darg0 <White | Black> [-Darg1 <maxDurataTurno>]
 
 Specificando `-Darg0 White` o `-Darg0 Black` si lancia il client, rispettivamente, per giocare con i bianchi o con i neri.
 
-Mentre è possibile specificare (in secondi) la durata massima di un turno con `-Darg1 <maxDurataTurno>` . Se non si specifica la durata di default sarà di 60 secondi.
+Mentre e' possibile specificare (in secondi) la durata massima di un turno con `-Darg1 <maxDurataTurno>` . Se non si specifica la durata di default sara' di 60 secondi.
