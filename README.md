@@ -3,6 +3,14 @@ Software per la [Tablut Students Competition](https://github.com/AGalassi/Tablut
 
 Il progetto e' stato realizzato da Nicolo' Romandini e Ugo Leone Cavalcanti.
 
+## Esecuzione JAR ( JDK 1.8 )
+
+Il comando da eseguire è il seguente:
+```bash
+java -jar cristinaChiaBOT <White|Black> [timeout]
+```
+Si ricorda di inserire il timeout in **millisecondi**. Di default è settato a 60000.
+
 ## Installazione su Ubuntu/Debian 
 
 Queste sono le istruzioni per installare le librerie necessarie su ambiente
